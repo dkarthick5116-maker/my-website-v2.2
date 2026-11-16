@@ -1,83 +1,330 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#10243a">
-  <title>My Website V2.2 | Learning Portal</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Portal V2.2 - Tamil Nadu & CBSE</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand"><span class="brand-mark">MW</span><span>My Website <small>V2.2</small></span></div>
-    <div class="header-actions">
-      <select id="languageSelect" aria-label="Language"><option value="en">English</option><option value="ta">தமிழ்</option></select>
-      <span class="board-label">TN State Board • CBSE</span>
+
+  <!-- Top Navigation & Language Switcher -->
+  <header class="top-nav">
+    <div class="logo">
+      <h2 id="portal-title">Education Portal V2.2</h2>
+    </div>
+    <div class="lang-switch">
+      <button type="button" id="lang-en" class="active-lang" onclick="setLanguage('en')">English</button>
+      <button type="button" id="lang-ta" onclick="setLanguage('ta')">தமிழ்</button>
     </div>
   </header>
-  <main class="container">
-    <section class="hero">
-      <p class="eyebrow" data-i18n="eyebrow">LEARN • PRACTISE • GROW</p>
-      <h1 data-i18n="welcome">Your learning space starts here.</h1>
-      <p data-i18n="intro">A shared learning portal for students and teachers.</p>
-      <div class="chips"><span>தமிழ் + English</span><span>Tamil Nadu State Board</span><span>CBSE</span></div>
+
+  <main class="main-container">
+    <!-- Portal Selection Tabs -->
+    <div class="role-selector">
+      <button type="button" id="tab-student" class="tab-btn active" onclick="switchRole('student')">
+        <span class="text-en">Student Portal</span>
+        <span class="text-ta" style="display:none;">மாணவர் தளம்</span>
+      </button>
+      <button type="button" id="tab-teacher" class="tab-btn" onclick="switchRole('teacher')">
+        <span class="text-en">Teacher Portal</span>
+        <span class="text-ta" style="display:none;">ஆசிரியர் தளம்</span>
+      </button>
+    </div>
+
+    <!-- Feedback Message Box -->
+    <div id="alert-box" class="alert-box" style="display: none;"></div>
+
+    <!-- ================= STUDENT SECTION ================= -->
+    <section id="student-section" class="auth-section">
+
+      <!-- Student Login Form -->
+      <div id="student-login-box" class="card">
+        <h3 class="text-en">Student Login</h3>
+        <h3 class="text-ta" style="display:none;">மாணவர் உள்நுழைவு</h3>
+
+        <form id="student-login-form">
+          <div class="form-group">
+            <label class="text-en">School Name</label>
+            <label class="text-ta" style="display:none;">பள்ளியின் பெயர்</label>
+            <input type="text" id="stu-login-school" placeholder="Enter school name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Roll Number</label>
+            <label class="text-ta" style="display:none;">வரிசை எண் (Roll No)</label>
+            <input type="text" id="stu-login-roll" placeholder="Enter roll number" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Password</label>
+            <label class="text-ta" style="display:none;">கடவுச்சொல்</label>
+            <input type="password" id="stu-login-password" placeholder="Enter password" required>
+          </div>
+
+          <button type="submit" class="btn primary-btn">
+            <span class="text-en">Login</span>
+            <span class="text-ta" style="display:none;">உள்நுழைக</span>
+          </button>
+        </form>
+
+        <div class="card-footer">
+          <p>
+            <a href="#" onclick="showStudentForgot(); return false;">
+              <span class="text-en">Forgot Password?</span>
+              <span class="text-ta" style="display:none;">கடவுச்சொல்லை மறந்துவிட்டீர்களா?</span>
+            </a>
+          </p>
+          <p>
+            <span class="text-en">New student?</span>
+            <span class="text-ta" style="display:none;">புதிய மாணவரா?</span>
+            <a href="#" onclick="toggleStudentMode('register'); return false;">
+              <span class="text-en">Register here</span>
+              <span class="text-ta" style="display:none;">இங்கே பதிவு செய்யவும்</span>
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Student Register Form -->
+      <div id="student-register-box" class="card" style="display:none;">
+        <h3 class="text-en">Student Registration</h3>
+        <h3 class="text-ta" style="display:none;">மாணவர் பதிவு</h3>
+
+        <form id="student-register-form">
+          <div class="form-group">
+            <label class="text-en">Full Name</label>
+            <label class="text-ta" style="display:none;">முழு பெயர்</label>
+            <input type="text" id="stu-reg-name" placeholder="Enter full name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">School Name</label>
+            <label class="text-ta" style="display:none;">பள்ளியின் பெயர்</label>
+            <input type="text" id="stu-reg-school" placeholder="Enter school name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Curriculum Board</label>
+            <label class="text-ta" style="display:none;">கல்வி வாரியம்</label>
+            <select id="stu-reg-board" required>
+              <option value="State Board">Tamil Nadu State Board</option>
+              <option value="CBSE">CBSE</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Class / Standard</label>
+            <label class="text-ta" style="display:none;">வகுப்பு</label>
+            <select id="stu-reg-class" required>
+              <option value="6">Class 6</option>
+              <option value="7">Class 7</option>
+              <option value="8">Class 8</option>
+              <option value="9">Class 9</option>
+              <option value="10">Class 10</option>
+              <option value="11">Class 11</option>
+              <option value="12">Class 12</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Roll Number</label>
+            <label class="text-ta" style="display:none;">வரிசை எண் (Roll No)</label>
+            <input type="text" id="stu-reg-roll" placeholder="Enter unique roll number" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Create Password</label>
+            <label class="text-ta" style="display:none;">கடவுச்சொல்லை உருவாக்கவும்</label>
+            <input type="password" id="stu-reg-password" placeholder="At least 6 characters" minlength="6" required>
+          </div>
+
+          <button type="submit" class="btn primary-btn">
+            <span class="text-en">Register</span>
+            <span class="text-ta" style="display:none;">பதிவு செய்க</span>
+          </button>
+        </form>
+
+        <div class="card-footer">
+          <p>
+            <span class="text-en">Already registered?</span>
+            <span class="text-ta" style="display:none;">ஏற்கனவே கணக்கு உள்ளதா?</span>
+            <a href="#" onclick="toggleStudentMode('login'); return false;">
+              <span class="text-en">Login here</span>
+              <span class="text-ta" style="display:none;">இங்கே உள்நுழையவும்</span>
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Student Password Recovery Box -->
+      <div id="student-recovery-box" class="card" style="display:none;">
+        <h3 class="text-en">Student Password Recovery</h3>
+        <h3 class="text-ta" style="display:none;">மாணவர் கடவுச்சொல் மீட்டெடுப்பு</h3>
+
+        <form id="student-recovery-form">
+          <div class="form-group">
+            <label class="text-en">School Name</label>
+            <label class="text-ta" style="display:none;">பள்ளியின் பெயர்</label>
+            <input type="text" id="stu-rec-school" placeholder="Enter registered school" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Roll Number</label>
+            <label class="text-ta" style="display:none;">வரிசை எண்</label>
+            <input type="text" id="stu-rec-roll" placeholder="Enter roll number" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">New Password</label>
+            <label class="text-ta" style="display:none;">புதிய கடவுச்சொல்</label>
+            <input type="password" id="stu-rec-newpassword" placeholder="Enter new password" minlength="6" required>
+          </div>
+
+          <button type="submit" class="btn primary-btn">
+            <span class="text-en">Reset Password</span>
+            <span class="text-ta" style="display:none;">கடவுச்சொல்லை மாற்று</span>
+          </button>
+        </form>
+
+        <div class="card-footer">
+          <a href="#" onclick="toggleStudentMode('login'); return false;">
+            <span class="text-en">Back to Login</span>
+            <span class="text-ta" style="display:none;">உள்நுழைவுக்குத் திரும்பு</span>
+          </a>
+        </div>
+      </div>
     </section>
 
-    <section class="auth-layout">
-      <div class="role-tabs" role="tablist">
-        <button class="role-tab active" data-role="student" data-i18n="student">Student</button>
-        <button class="role-tab" data-role="teacher" data-i18n="teacher">Teacher</button>
-      </div>
-      <section class="panel">
-        <div class="panel-heading">
-          <div><p class="eyebrow" data-i18n="portal">PORTAL ACCESS</p><h2 id="formTitle">Student login</h2></div>
-          <span class="secure">● Secure access</span>
-        </div>
-        <div class="mode-tabs">
-          <button class="mode-tab active" data-mode="login" data-i18n="login">Login</button>
-          <button class="mode-tab" data-mode="signup" data-i18n="signup">Create account</button>
-        </div>
-        <form id="authForm">
-          <label id="nameWrap" class="hidden"><span data-i18n="fullName">Full name</span><input id="fullName" autocomplete="name"></label>
-          <label id="emailWrap" class="hidden"><span>Email address (teacher)</span><input id="email" type="email" autocomplete="email"></label>
-          <label><span data-i18n="school">School name</span><input id="school" required autocomplete="organization" placeholder="Enter your school name"></label>
-          <label id="rollWrap"><span data-i18n="roll">Student roll number</span><input id="roll" autocomplete="username"></label>
-          <div class="two-col">
-            <label id="classWrap"><span data-i18n="class">Class</span><select id="className"><option value="">Select class</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></label>
-            <label id="boardWrap"><span data-i18n="board">Curriculum</span><select id="board"><option value="TN State Board">TN State Board</option><option value="CBSE">CBSE</option></select></label>
+    <!-- ================= TEACHER SECTION ================= -->
+    <section id="teacher-section" class="auth-section" style="display:none;">
+
+      <!-- Teacher Login Form -->
+      <div id="teacher-login-box" class="card">
+        <h3 class="text-en">Teacher Login</h3>
+        <h3 class="text-ta" style="display:none;">ஆசிரியர் உள்நுழைவு</h3>
+
+        <form id="teacher-login-form">
+          <div class="form-group">
+            <label class="text-en">Email Address</label>
+            <label class="text-ta" style="display:none;">மின்னஞ்சல் முகவரி</label>
+            <input type="email" id="teach-login-email" placeholder="name@school.com" required>
           </div>
-          <label><span data-i18n="password">Password</span><input id="password" type="password" required minlength="8" autocomplete="current-password"></label>
-          <label id="guardianWrap" class="hidden"><span>Parent/guardian email (optional)</span><input id="guardianEmail" type="email"></label>
-          <button class="primary-btn" id="submitBtn" type="submit" data-i18n="continue">Continue</button>
-          <p id="formMessage" class="message" role="status"></p>
+
+          <div class="form-group">
+            <label class="text-en">Password</label>
+            <label class="text-ta" style="display:none;">கடவுச்சொல்</label>
+            <input type="password" id="teach-login-password" placeholder="Enter password" required>
+          </div>
+
+          <button type="submit" class="btn primary-btn">
+            <span class="text-en">Login</span>
+            <span class="text-ta" style="display:none;">உள்நுழைக</span>
+          </button>
         </form>
-        <div class="recovery-links">
-          <button id="forgotStudent" class="text-btn">Student forgot password?</button>
-          <button id="forgotTeacher" class="text-btn hidden">Teacher forgot password?</button>
+
+        <div class="card-footer">
+          <p>
+            <a href="#" onclick="showTeacherForgot(); return false;">
+              <span class="text-en">Forgot Password?</span>
+              <span class="text-ta" style="display:none;">கடவுச்சொல்லை மறந்துவிட்டீர்களா?</span>
+            </a>
+          </p>
+          <p>
+            <span class="text-en">New teacher?</span>
+            <span class="text-ta" style="display:none;">புதிய ஆசிரியரா?</span>
+            <a href="#" onclick="toggleTeacherMode('register'); return false;">
+              <span class="text-en">Register here</span>
+              <span class="text-ta" style="display:none;">இங்கே பதிவு செய்யவும்</span>
+            </a>
+          </p>
         </div>
-        <div id="studentRecovery" class="recovery-box hidden">
-          <h3>Student password assistance</h3>
-          <p>Student resets must be completed by an authorised school administrator. Contact your school's verified administrator. Do not share your password.</p>
-          <p class="hint">This starter portal does not let students reset accounts using only a roll number or school name.</p>
-        </div>
-        <form id="teacherRecovery" class="recovery-box hidden">
-          <h3>Teacher password recovery</h3>
-          <label><span>Teacher email</span><input id="recoveryEmail" type="email" required></label>
-          <button class="primary-btn" type="submit">Send recovery link</button>
-          <p id="recoveryMessage" class="message" role="status"></p>
+      </div>
+
+      <!-- Teacher Register Form -->
+      <div id="teacher-register-box" class="card" style="display:none;">
+        <h3 class="text-en">Teacher Registration</h3>
+        <h3 class="text-ta" style="display:none;">ஆசிரியர் பதிவு</h3>
+
+        <form id="teacher-register-form">
+          <div class="form-group">
+            <label class="text-en">Full Name</label>
+            <label class="text-ta" style="display:none;">முழு பெயர்</label>
+            <input type="text" id="teach-reg-name" placeholder="Enter full name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">School Name</label>
+            <label class="text-ta" style="display:none;">பள்ளியின் பெயர்</label>
+            <input type="text" id="teach-reg-school" placeholder="Enter your school name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Email Address</label>
+            <label class="text-ta" style="display:none;">மின்னஞ்சல் முகவரி</label>
+            <input type="email" id="teach-reg-email" placeholder="name@school.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Password</label>
+            <label class="text-ta" style="display:none;">கடவுச்சொல்</label>
+            <input type="password" id="teach-reg-password" placeholder="At least 6 characters" minlength="6" required>
+          </div>
+
+          <button type="submit" class="btn primary-btn">
+            <span class="text-en">Register</span>
+            <span class="text-ta" style="display:none;">பதிவு செய்க</span>
+          </button>
         </form>
-      </section>
-      <aside class="side-card">
-        <div class="side-icon">✦</div><h3 data-i18n="forEveryone">One portal. Two roles.</h3>
-        <p data-i18n="studentInfo">Students can access learning resources and practice activities.</p>
-        <hr><p data-i18n="teacherInfo">Teachers can organise learning materials and prepare practice activities.</p>
-        <p class="small-note">V2.2 is a starter build. Connect and configure your own Supabase project before using real accounts.</p>
-      </aside>
+
+        <div class="card-footer">
+          <p>
+            <span class="text-en">Already registered?</span>
+            <span class="text-ta" style="display:none;">ஏற்கனவே கணக்கு உள்ளதா?</span>
+            <a href="#" onclick="toggleTeacherMode('login'); return false;">
+              <span class="text-en">Login here</span>
+              <span class="text-ta" style="display:none;">இங்கே உள்நுழையவும்</span>
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Teacher Forgot Password Box -->
+      <div id="teacher-forgot-box" class="card" style="display:none;">
+        <h3 class="text-en">Reset Password via Email</h3>
+        <h3 class="text-ta" style="display:none;">மின்னஞ்சல் வழி கடவுச்சொல் மாற்றம்</h3>
+
+        <form id="teacher-forgot-form">
+          <div class="form-group">
+            <label class="text-en">Email Address</label>
+            <label class="text-ta" style="display:none;">மின்னஞ்சல் முகவரி</label>
+            <input type="email" id="teach-forgot-email" placeholder="Enter your registered email" required>
+          </div>
+
+          <button type="submit" class="btn primary-btn">
+            <span class="text-en">Send Reset Link</span>
+            <span class="text-ta" style="display:none;">இணைப்பை அனுப்பு</span>
+          </button>
+        </form>
+
+        <div class="card-footer">
+          <a href="#" onclick="toggleTeacherMode('login'); return false;">
+            <span class="text-en">Back to Login</span>
+            <span class="text-ta" style="display:none;">உள்நுழைவுக்குத் திரும்பு</span>
+          </a>
+        </div>
+      </div>
     </section>
-    <footer>© My Website V2.2 · Learning for everyone</footer>
   </main>
+
+  <!-- Firebase SDK Libraries (Compat Version) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <!-- Website Configuration and Logic -->
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
+              
