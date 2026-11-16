@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10243a">
+  <title>My Website V2.2 | Learning Portal</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">MW</span><span>My Website <small>V2.2</small></span></div>
+    <div class="header-actions">
+      <select id="languageSelect" aria-label="Language"><option value="en">English</option><option value="ta">தமிழ்</option></select>
+      <span class="board-label">TN State Board • CBSE</span>
+    </div>
+  </header>
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow" data-i18n="eyebrow">LEARN • PRACTISE • GROW</p>
+      <h1 data-i18n="welcome">Your learning space starts here.</h1>
+      <p data-i18n="intro">A shared learning portal for students and teachers.</p>
+      <div class="chips"><span>தமிழ் + English</span><span>Tamil Nadu State Board</span><span>CBSE</span></div>
+    </section>
+
+    <section class="auth-layout">
+      <div class="role-tabs" role="tablist">
+        <button class="role-tab active" data-role="student" data-i18n="student">Student</button>
+        <button class="role-tab" data-role="teacher" data-i18n="teacher">Teacher</button>
+      </div>
+      <section class="panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow" data-i18n="portal">PORTAL ACCESS</p><h2 id="formTitle">Student login</h2></div>
+          <span class="secure">● Secure access</span>
+        </div>
+        <div class="mode-tabs">
+          <button class="mode-tab active" data-mode="login" data-i18n="login">Login</button>
+          <button class="mode-tab" data-mode="signup" data-i18n="signup">Create account</button>
+        </div>
+        <form id="authForm">
+          <label id="nameWrap" class="hidden"><span data-i18n="fullName">Full name</span><input id="fullName" autocomplete="name"></label>
+          <label id="emailWrap" class="hidden"><span>Email address (teacher)</span><input id="email" type="email" autocomplete="email"></label>
+          <label><span data-i18n="school">School name</span><input id="school" required autocomplete="organization" placeholder="Enter your school name"></label>
+          <label id="rollWrap"><span data-i18n="roll">Student roll number</span><input id="roll" autocomplete="username"></label>
+          <div class="two-col">
+            <label id="classWrap"><span data-i18n="class">Class</span><select id="className"><option value="">Select class</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></label>
+            <label id="boardWrap"><span data-i18n="board">Curriculum</span><select id="board"><option value="TN State Board">TN State Board</option><option value="CBSE">CBSE</option></select></label>
+          </div>
+          <label><span data-i18n="password">Password</span><input id="password" type="password" required minlength="8" autocomplete="current-password"></label>
+          <label id="guardianWrap" class="hidden"><span>Parent/guardian email (optional)</span><input id="guardianEmail" type="email"></label>
+          <button class="primary-btn" id="submitBtn" type="submit" data-i18n="continue">Continue</button>
+          <p id="formMessage" class="message" role="status"></p>
+        </form>
+        <div class="recovery-links">
+          <button id="forgotStudent" class="text-btn">Student forgot password?</button>
+          <button id="forgotTeacher" class="text-btn hidden">Teacher forgot password?</button>
+        </div>
+        <div id="studentRecovery" class="recovery-box hidden">
+          <h3>Student password assistance</h3>
+          <p>Student resets must be completed by an authorised school administrator. Contact your school's verified administrator. Do not share your password.</p>
+          <p class="hint">This starter portal does not let students reset accounts using only a roll number or school name.</p>
+        </div>
+        <form id="teacherRecovery" class="recovery-box hidden">
+          <h3>Teacher password recovery</h3>
+          <label><span>Teacher email</span><input id="recoveryEmail" type="email" required></label>
+          <button class="primary-btn" type="submit">Send recovery link</button>
+          <p id="recoveryMessage" class="message" role="status"></p>
+        </form>
+      </section>
+      <aside class="side-card">
+        <div class="side-icon">✦</div><h3 data-i18n="forEveryone">One portal. Two roles.</h3>
+        <p data-i18n="studentInfo">Students can access learning resources and practice activities.</p>
+        <hr><p data-i18n="teacherInfo">Teachers can organise learning materials and prepare practice activities.</p>
+        <p class="small-note">V2.2 is a starter build. Connect and configure your own Supabase project before using real accounts.</p>
+      </aside>
+    </section>
+    <footer>© My Website V2.2 · Learning for everyone</footer>
+  </main>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
