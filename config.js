@@ -1,6 +1,19 @@
-// Add your V2.2 Supabase project details here after creating the project.
-// Use only the Project URL and publishable/anon key. NEVER put a service-role key here.
-window.APP_CONFIG = {
-  SUPABASE_URL: "https://vlnxdozdaqehjlosalbj.supabase.co",
-  SUPABASE_ANON_KEY: "sb_publishable_yYsgA_uHnh5teZy08ke_Lw_D0T8oBMR"
+// Firebase Configuration for My Website V2.2
+const firebaseConfig = {
+  apiKey: "AIzaSyAP71Mis9RHEHSF_NHFhI6voPTkulswMqk",
+  authDomain: "my-website-v2-2.firebaseapp.com",
+  projectId: "my-website-v2-2",
+  storageBucket: "my-website-v2-2.firebasestorage.app",
+  messagingSenderId: "562095804702",
+  appId: "1:562095804702:web:1073950b4dc7ccd1e5790f"
 };
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+// Initialize Authentication and Firestore services
+const auth = firebase.auth();
+const db = firebase.firestore();
+
