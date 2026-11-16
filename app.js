@@ -1,77 +1,256 @@
-(() => {
-  const $ = id => document.getElementById(id);
-  const state = { role: "student", mode: "login", lang: "en" };
-  const translations = {
-    en:{eyebrow:"LEARN • PRACTISE • GROW",welcome:"Your learning space starts here.",intro:"A shared learning portal for students and teachers.",student:"Student",teacher:"Teacher",portal:"PORTAL ACCESS",login:"Login",signup:"Create account",fullName:"Full name",school:"School name",roll:"Student roll number",class:"Class",board:"Curriculum",password:"Password",continue:"Continue",forEveryone:"One portal. Two roles.",studentInfo:"Students can access learning resources and practice activities.",teacherInfo:"Teachers can organise learning materials and prepare practice activities."},
-    ta:{eyebrow:"கற்க • பயிற்சி செய்ய • வளர",welcome:"உங்கள் கற்றல் பயணம் இங்கே தொடங்குகிறது.",intro:"மாணவர்கள் மற்றும் ஆசிரியர்களுக்கான கற்றல் தளம்.",student:"மாணவர்",teacher:"ஆசிரியர்",portal:"உள்நுழைவு",login:"உள்நுழைவு",signup:"கணக்கு உருவாக்கு",fullName:"முழுப் பெயர்",school:"பள்ளியின் பெயர்",roll:"மாணவர் வரிசை எண்",class:"வகுப்பு",board:"பாடத்திட்டம்",password:"கடவுச்சொல்",continue:"தொடரவும்",forEveryone:"ஒரே தளம். இரண்டு வகை பயனர்கள்.",studentInfo:"மாணவர்கள் கற்றல் வளங்களையும் பயிற்சிகளையும் அணுகலாம்.",teacherInfo:"ஆசிரியர்கள் கற்றல் பொருட்களை ஒழுங்குபடுத்தலாம்."}
-  };
-  const supabaseReady = () => window.APP_CONFIG &&
-    /^https:\/\//.test(window.APP_CONFIG.SUPABASE_URL) &&
-    !window.APP_CONFIG.SUPABASE_URL.includes("PASTE_") &&
-    window.APP_CONFIG.SUPABASE_ANON_KEY &&
-    !window.APP_CONFIG.SUPABASE_ANON_KEY.includes("PASTE_") &&
-    window.supabase;
-  let client = null;
-  if (supabaseReady()) client = window.supabase.createClient(window.APP_CONFIG.SUPABASE_URL, window.APP_CONFIG.SUPABASE_ANON_KEY);
+// ==========================================
+// MY WEBSITE V2.2 - CORE APPLICATION SCRIPT
+// Firebase Authentication & Firestore Logic
+// ==========================================
 
-  function message(text, error=false) { $("formMessage").textContent=text; $("formMessage").style.color=error?"#b42318":"#24536c"; }
-  function render() {
-    document.querySelectorAll(".role-tab").forEach(b=>b.classList.toggle("active",b.dataset.role===state.role));
-    document.querySelectorAll(".mode-tab").forEach(b=>b.classList.toggle("active",b.dataset.mode===state.mode));
-    const student=state.role==="student", signup=state.mode==="signup";
-    $("formTitle").textContent=(student?"Student":"Teacher")+" "+(signup?"signup":"login");
-    $("nameWrap").classList.toggle("hidden",!signup);
-    $("emailWrap").classList.toggle("hidden",student);
-    $("rollWrap").classList.toggle("hidden",!student);
-    $("classWrap").classList.toggle("hidden",!student||!signup);
-    $("boardWrap").classList.toggle("hidden",!signup);
-    $("guardianWrap").classList.toggle("hidden",!student||!signup);
-    $("forgotStudent").classList.toggle("hidden",!student||signup);
-    $("forgotTeacher").classList.toggle("hidden",student||signup);
-    $("studentRecovery").classList.add("hidden"); $("teacherRecovery").classList.add("hidden");
-    $("submitBtn").textContent=signup?"Create account":"Login";
-    $("password").autocomplete=signup?"new-password":"current-password";
-    message("");
+// --- Helper Functions ---
+function showMessage(text, isError = false) {
+  const box = document.getElementById("alert-box");
+  box.textContent = text;
+  box.style.display = "block";
+  box.style.backgroundColor = isError ? "#ffebee" : "#e8f5e9";
+  box.style.color = isError ? "#c62828" : "#2e7d32";
+  box.style.borderColor = isError ? "#ef9a9a" : "#a5d6a7";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function clearMessage() {
+  const box = document.getElementById("alert-box");
+  box.textContent = "";
+  box.style.display = "none";
+}
+
+// Convert school name and roll number into a deterministic internal Firebase ID
+function generateStudentInternalEmail(school, rollNumber) {
+  const cleanSchool = school.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  const cleanRoll = rollNumber.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  return `stu_${cleanSchool}_${cleanRoll}@v22portal.local`;
+}
+
+// --- Bilingual Language Switcher ---
+function setLanguage(lang) {
+  document.querySelectorAll(".text-en").forEach(el => {
+    el.style.display = lang === "en" ? "inline" : "none";
+  });
+  document.querySelectorAll(".text-ta").forEach(el => {
+    el.style.display = lang === "ta" ? "inline" : "none";
+  });
+
+  const btnEn = document.getElementById("lang-en");
+  const btnTa = document.getElementById("lang-ta");
+  if (btnEn && btnTa) {
+    btnEn.classList.toggle("active-lang", lang === "en");
+    btnTa.classList.toggle("active-lang", lang === "ta");
   }
-  document.querySelectorAll(".role-tab").forEach(b=>b.addEventListener("click",()=>{state.role=b.dataset.role;render();}));
-  document.querySelectorAll(".mode-tab").forEach(b=>b.addEventListener("click",()=>{state.mode=b.dataset.mode;render();}));
-  $("languageSelect").addEventListener("change",e=>{state.lang=e.target.value;document.querySelectorAll("[data-i18n]").forEach(el=>{const k=el.dataset.i18n;if(translations[state.lang][k])el.textContent=translations[state.lang][k];});render();});
-  $("forgotStudent").addEventListener("click",()=>{$("studentRecovery").classList.toggle("hidden");});
-  $("forgotTeacher").addEventListener("click",()=>{$("teacherRecovery").classList.toggle("hidden");});
-  $("authForm").addEventListener("submit",async e=>{
+}
+
+// --- Role Switcher (Student / Teacher) ---
+function switchRole(role) {
+  clearMessage();
+  const studentSection = document.getElementById("student-section");
+  const teacherSection = document.getElementById("teacher-section");
+  const tabStudent = document.getElementById("tab-student");
+  const tabTeacher = document.getElementById("tab-teacher");
+
+  if (role === "student") {
+    studentSection.style.display = "block";
+    teacherSection.style.display = "none";
+    tabStudent.classList.add("active");
+    tabTeacher.classList.remove("active");
+    toggleStudentMode("login");
+  } else {
+    studentSection.style.display = "none";
+    teacherSection.style.display = "block";
+    tabTeacher.classList.add("active");
+    tabStudent.classList.remove("active");
+    toggleTeacherMode("login");
+  }
+}
+
+// --- Student View Toggles ---
+function toggleStudentMode(mode) {
+  clearMessage();
+  document.getElementById("student-login-box").style.display = mode === "login" ? "block" : "none";
+  document.getElementById("student-register-box").style.display = mode === "register" ? "block" : "none";
+  document.getElementById("student-recovery-box").style.display = "none";
+}
+
+function showStudentForgot() {
+  clearMessage();
+  document.getElementById("student-login-box").style.display = "none";
+  document.getElementById("student-register-box").style.display = "none";
+  document.getElementById("student-recovery-box").style.display = "block";
+}
+
+// --- Teacher View Toggles ---
+function toggleTeacherMode(mode) {
+  clearMessage();
+  document.getElementById("teacher-login-box").style.display = mode === "login" ? "block" : "none";
+  document.getElementById("teacher-register-box").style.display = mode === "register" ? "block" : "none";
+  document.getElementById("teacher-forgot-box").style.display = "none";
+}
+
+function showTeacherForgot() {
+  clearMessage();
+  document.getElementById("teacher-login-box").style.display = "none";
+  document.getElementById("teacher-register-box").style.display = "none";
+  document.getElementById("teacher-forgot-box").style.display = "block";
+}
+
+// ==========================================
+// FORM SUBMISSIONS & FIREBASE INTEGRATION
+// ==========================================
+
+// 1. Student Registration
+const studentRegisterForm = document.getElementById("student-register-form");
+if (studentRegisterForm) {
+  studentRegisterForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if(!client){message("Supabase is not configured yet. Add your V2.2 project URL and public key in config.js first.",true);return;}
-    const school=$("school").value.trim(), password=$("password").value;
-    if(password.length<8){message("Use a password with at least 8 characters.",true);return;}
-    $("submitBtn").disabled=true;
-    try{
-      if(state.role==="teacher"){
-        const email=$("email").value.trim();
-        if(state.mode==="signup"){
-          const {error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin, data:{role:"teacher",full_name:$("fullName").value.trim(),school_name:school,curriculum:$("board").value}}});
-          if(error)throw error; message("Account request submitted. Check your email for verification before logging in.");
-        }else{
-          const {data,error}=await client.auth.signInWithPassword({email,password}); if(error)throw error;
-          const profile=data.user.user_metadata||{};
-          if(profile.role!=="teacher"||String(profile.school_name||"").trim().toLowerCase()!==school.toLowerCase()){await client.auth.signOut();throw new Error("The account role or school name does not match.");}
-          message("Signed in. Dashboard features will be enabled after the V2.2 database setup is completed.");
-        }
-      }else{
-        const fn=state.mode==="signup"?"student-signup":"student-login";
-        const body=state.mode==="signup"?{full_name:$("fullName").value.trim(),school_name:school,roll_number:$("roll").value.trim(),class_name:$("className").value,curriculum:$("board").value,password,guardian_email:$("guardianEmail").value.trim()||null}:{school_name:school,roll_number:$("roll").value.trim(),password};
-        const {data,error}=await client.functions.invoke(fn,{body}); if(error)throw error;
-        if(data?.error)throw new Error(data.error);
-        if(data?.access_token&&data?.refresh_token){await client.auth.setSession({access_token:data.access_token,refresh_token:data.refresh_token});}
-        message(state.mode==="signup"?"Student account created. You can now log in.":"Student login successful.");
+    clearMessage();
+
+    const name = document.getElementById("stu-reg-name").value.trim();
+    const school = document.getElementById("stu-reg-school").value.trim();
+    const board = document.getElementById("stu-reg-board").value;
+    const classLevel = document.getElementById("stu-reg-class").value;
+    const roll = document.getElementById("stu-reg-roll").value.trim();
+    const password = document.getElementById("stu-reg-password").value;
+
+    const syntheticEmail = generateStudentInternalEmail(school, roll);
+
+    try {
+      // Create user in Firebase Authentication
+      const userCredential = await auth.createUserWithEmailAndPassword(syntheticEmail, password);
+      const user = userCredential.user;
+
+      // Save Student Profile in Firestore
+      await db.collection("students").doc(user.uid).set({
+        uid: user.uid,
+        name: name,
+        school: school,
+        board: board,
+        classLevel: classLevel,
+        rollNumber: roll,
+        role: "student",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      showMessage("Registration successful! You can now log in with your School Name, Roll Number, and Password.");
+      studentRegisterForm.reset();
+      toggleStudentMode("login");
+    } catch (err) {
+      if (err.code === "auth/email-already-in-use") {
+        showMessage("This Roll Number is already registered for this school.", true);
+      } else {
+        showMessage(err.message, true);
       }
-    }catch(err){message(err.message||"Something went wrong. Please try again.",true);}
-    finally{$("submitBtn").disabled=false;}
+    }
   });
-  $("teacherRecovery").addEventListener("submit",async e=>{
-    e.preventDefault(); if(!client){$("recoveryMessage").textContent="Configure Supabase first.";return;}
-    const email=$("recoveryEmail").value.trim();
-    const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+"/reset-password.html"});
-    $("recoveryMessage").textContent=error?error.message:"If this email belongs to a teacher account, a recovery link will be sent.";
+}
+
+// 2. Student Login
+const studentLoginForm = document.getElementById("student-login-form");
+if (studentLoginForm) {
+  studentLoginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearMessage();
+
+    const school = document.getElementById("stu-login-school").value.trim();
+    const roll = document.getElementById("stu-login-roll").value.trim();
+    const password = document.getElementById("stu-login-password").value;
+
+    const syntheticEmail = generateStudentInternalEmail(school, roll);
+
+    try {
+      const userCredential = await auth.signInWithEmailAndPassword(syntheticEmail, password);
+      showMessage("Welcome " + school + " student! Login successful.");
+      // Redirect or load dashboard here
+    } catch (err) {
+      showMessage("Invalid School Name, Roll Number, or Password.", true);
+    }
   });
-  render();
-})();
+}
+
+// 3. Student Password Recovery
+const studentRecoveryForm = document.getElementById("student-recovery-form");
+if (studentRecoveryForm) {
+  studentRecoveryForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearMessage();
+    showMessage("Password reset request submitted. Contact your school administrator or teacher to complete recovery.", false);
+  });
+}
+
+// 4. Teacher Registration
+const teacherRegisterForm = document.getElementById("teacher-register-form");
+if (teacherRegisterForm) {
+  teacherRegisterForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearMessage();
+
+    const name = document.getElementById("teach-reg-name").value.trim();
+    const school = document.getElementById("teach-reg-school").value.trim();
+    const email = document.getElementById("teach-reg-email").value.trim();
+    const password = document.getElementById("teach-reg-password").value;
+
+    try {
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+
+      // Save Teacher Profile in Firestore
+      await db.collection("teachers").doc(user.uid).set({
+        uid: user.uid,
+        name: name,
+        school: school,
+        email: email,
+        role: "teacher",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      showMessage("Teacher account registered successfully! You can now log in.");
+      teacherRegisterForm.reset();
+      toggleTeacherMode("login");
+    } catch (err) {
+      showMessage(err.message, true);
+    }
+  });
+}
+
+// 5. Teacher Login
+const teacherLoginForm = document.getElementById("teacher-login-form");
+if (teacherLoginForm) {
+  teacherLoginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearMessage();
+
+    const email = document.getElementById("teach-login-email").value.trim();
+    const password = document.getElementById("teach-login-password").value;
+
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      showMessage("Welcome Teacher! Login successful.");
+      // Redirect or load dashboard here
+    } catch (err) {
+      showMessage(err.message, true);
+    }
+  });
+}
+
+// 6. Teacher Password Reset
+const teacherForgotForm = document.getElementById("teacher-forgot-form");
+if (teacherForgotForm) {
+  teacherForgotForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearMessage();
+
+    const email = document.getElementById("teach-forgot-email").value.trim();
+
+    try {
+      await auth.sendPasswordResetEmail(email);
+      showMessage("Password reset email sent! Check your inbox for the link.");
+      teacherForgotForm.reset();
+    } catch (err) {
+      showMessage(err.message, true);
+    }
+  });
+}
+  
