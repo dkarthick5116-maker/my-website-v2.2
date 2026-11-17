@@ -950,3 +950,308 @@ if (teacherForgotForm) {
     }
   });
 }
+// ==========================================
+// EXAMINATION & RESULTS MANAGEMENT MODULE
+// ==========================================
+
+// 1. Teacher Panel Switcher for Exams
+const originalSwitchTeacherPanel = window.switchTeacherPanel;
+window.switchTeacherPanel = function(panelName) {
+  const panels = ["students", "attendance", "homework", "materials", "notices", "exams"];
+  panels.forEach(p => {
+    const el = document.getElementById(`panel-${p}`);
+    if (el) el.style.display = (p === panelName) ? "block" : "none";
+  });
+
+  const buttons = document.querySelectorAll(".t-nav-btn");
+  buttons.forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("onclick").includes(panelName));
+  });
+
+  if (panelName === "exams" && currentTeacherData) {
+    loadTeacherExaminations(currentTeacherData.school);
+  }
+};
+
+// 2. Exam Creation Listener
+const examForm = document.getElementById("teacher-exam-form");
+if (examForm) {
+  examForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!currentTeacherData) return;
+
+    const title = document.getElementById("exam-title").value.trim();
+    const subject = document.getElementById("exam-subject").value.trim();
+    const classLevel = document.getElementById("exam-class").value;
+    const examDate = document.getElementById("exam-date").value;
+    const maxMarks = parseInt(document.getElementById("exam-max-marks").value, 10);
+    const submitBtn = document.getElementById("exam-submit-btn");
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Creating Exam...";
+
+    try {
+      await db.collection("examinations").add({
+        title,
+        subject,
+        classLevel,
+        examDate,
+        maxMarks,
+        school: currentTeacherData.school,
+        teacherId: currentTeacherData.uid,
+        teacherName: currentTeacherData.name,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      alert("Examination scheduled successfully!");
+      examForm.reset();
+      loadTeacherExaminations(currentTeacherData.school);
+    } catch (err) {
+      console.error("Error creating exam:", err);
+      alert("Failed to schedule exam: " + err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Create Exam";
+    }
+  });
+}
+
+// 3. Load Scheduled Exams
+async function loadTeacherExaminations(schoolName) {
+  const container = document.getElementById("teacher-exam-list");
+  if (!container) return;
+
+  try {
+    const snapshot = await db.collection("examinations")
+      .where("school", "==", schoolName)
+      .get();
+
+    if (snapshot.empty) {
+      container.innerHTML = `<p class="placeholder-text">No examinations scheduled yet.</p>`;
+      return;
+    }
+
+    let html = "";
+    snapshot.forEach(docSnap => {
+      const exam = docSnap.data();
+      const examId = docSnap.id;
+      const safeTitle = exam.title.replace(/'/g, "\\'");
+
+      html += `
+        <div class="item-card">
+          <h5>${exam.title} - ${exam.subject}</h5>
+          <div class="item-meta">Class: ${exam.classLevel} | Date: ${exam.examDate} | Max Marks: ${exam.maxMarks}</div>
+          <div style="margin-top: 10px;">
+            <button type="button" class="btn" style="width: auto; padding: 6px 14px; font-size: 0.85rem; background: #166534; color: #fff;" onclick="openExamMarksPanel('${examId}', '${safeTitle}', '${exam.classLevel}', ${exam.maxMarks})">
+              📝 Enter / View Marks
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (err) {
+    console.error("Error loading exams:", err);
+    container.innerHTML = `<p class="placeholder-text">Error loading exams.</p>`;
+  }
+}
+
+// 4. Open Marks Entry Panel
+async function openExamMarksPanel(examId, examTitle, classLevel, maxMarks) {
+  const marksContainer = document.getElementById("exam-marks-container");
+  const marksTitle = document.getElementById("exam-marks-title");
+  const marksContent = document.getElementById("exam-marks-content");
+
+  marksContainer.style.display = "block";
+  marksTitle.textContent = `${examTitle} (Class ${classLevel} - Max: ${maxMarks})`;
+  marksContent.innerHTML = `<p class="placeholder-text">Loading student records...</p>`;
+  marksContainer.scrollIntoView({ behavior: "smooth" });
+
+  try {
+    const classStudents = cachedSchoolStudents.filter(s => s.classLevel === classLevel);
+
+    if (classStudents.length === 0) {
+      marksContent.innerHTML = `<p class="placeholder-text">No students registered in Class ${classLevel}.</p>`;
+      return;
+    }
+
+    const resultsSnapshot = await db.collection("examResults")
+      .where("examId", "==", examId)
+      .get();
+
+    const existingResults = {};
+    resultsSnapshot.forEach(doc => {
+      existingResults[doc.data().studentUid] = doc.data();
+    });
+
+    let html = `
+      <div class="table-container">
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>Roll</th>
+              <th>Student Name</th>
+              <th>Marks (/${maxMarks})</th>
+              <th>%</th>
+              <th>Grade</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    classStudents.forEach(stu => {
+      const res = existingResults[stu.uid] || null;
+      const marksVal = res ? res.marksObtained : "";
+      const pctVal = res ? `${res.percentage}%` : "-";
+      const gradeVal = res ? res.grade : "-";
+      const safeName = (stu.name || "").replace(/'/g, "\\'");
+
+      html += `
+        <tr>
+          <td><strong>${stu.rollNumber || "-"}</strong></td>
+          <td>${stu.name || "-"}</td>
+          <td>
+            <input type="number" id="mark-input-${stu.uid}" value="${marksVal}" min="0" max="${maxMarks}" placeholder="Marks" style="width: 80px; padding: 5px; font-size: 0.85rem;">
+          </td>
+          <td id="pct-${stu.uid}">${pctVal}</td>
+          <td id="grade-${stu.uid}"><strong>${gradeVal}</strong></td>
+          <td>
+            <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: #1a237e; color: #fff; width: auto;" onclick="saveStudentExamMark('${examId}', '${stu.uid}', '${stu.rollNumber}', '${safeName}', ${maxMarks}, '${classLevel}')">
+              Save
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table></div>`;
+    marksContent.innerHTML = html;
+  } catch (err) {
+    console.error("Error loading marks panel:", err);
+    marksContent.innerHTML = `<p class="placeholder-text" style="color:red;">Error loading students: ${err.message}</p>`;
+  }
+}
+
+// 5. Calculate Percentage, Grade & Save Result
+async function saveStudentExamMark(examId, studentUid, rollNumber, studentName, maxMarks, classLevel) {
+  const markInput = document.getElementById(`mark-input-${studentUid}`);
+  const markVal = parseFloat(markInput.value);
+
+  if (isNaN(markVal) || markVal < 0 || markVal > maxMarks) {
+    alert(`Please enter a valid mark between 0 and ${maxMarks}.`);
+    return;
+  }
+
+  const percentage = Math.round((markVal / maxMarks) * 100);
+
+  let grade = "F";
+  if (percentage >= 90) grade = "A+";
+  else if (percentage >= 80) grade = "A";
+  else if (percentage >= 70) grade = "B";
+  else if (percentage >= 60) grade = "C";
+  else if (percentage >= 50) grade = "D";
+
+  const resultDocId = `${examId}_${studentUid}`;
+
+  try {
+    await db.collection("examResults").doc(resultDocId).set({
+      examId,
+      studentUid,
+      studentRoll: rollNumber,
+      studentName,
+      classLevel,
+      school: currentTeacherData.school,
+      marksObtained: markVal,
+      maxMarks,
+      percentage,
+      grade,
+      savedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById(`pct-${studentUid}`).textContent = `${percentage}%`;
+    document.getElementById(`grade-${studentUid}`).innerHTML = `<strong>${grade}</strong>`;
+
+    alert(`Marks recorded for ${studentName}: ${markVal}/${maxMarks} (${grade})`);
+  } catch (err) {
+    console.error("Error saving mark:", err);
+    alert("Failed to save mark: " + err.message);
+  }
+}
+
+function closeMarksPanel() {
+  const container = document.getElementById("exam-marks-container");
+  if (container) container.style.display = "none";
+}
+
+// 6. Student Report Card Loader
+const originalSwitchStudentPanel = window.switchStudentPanel;
+window.switchStudentPanel = function(panel) {
+  ["hw", "mat", "notices", "exams"].forEach(p => {
+    const el = document.getElementById(`spanel-${p}`);
+    if (el) el.style.display = (p === panel) ? "block" : "none";
+  });
+
+  const btns = document.querySelectorAll(".s-nav-btn");
+  btns.forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("onclick").includes(panel));
+  });
+
+  if (panel === "exams" && currentStudentData) {
+    loadStudentReportCard(currentStudentData.uid);
+  }
+};
+
+async function loadStudentReportCard(studentUid) {
+  const container = document.getElementById("student-exam-list");
+  if (!container) return;
+
+  try {
+    const snapshot = await db.collection("examResults")
+      .where("studentUid", "==", studentUid)
+      .get();
+
+    if (snapshot.empty) {
+      container.innerHTML = `<p class="placeholder-text">No published exam results found yet.</p>`;
+      return;
+    }
+
+    let html = `
+      <div class="table-container">
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>Exam Name</th>
+              <th>Marks Scored</th>
+              <th>Max Marks</th>
+              <th>Percentage</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    for (const docSnap of snapshot.docs) {
+      const res = docSnap.data();
+      const examDoc = await db.collection("examinations").doc(res.examId).get();
+      const examTitle = examDoc.exists ? `${examDoc.data().title} (${examDoc.data().subject})` : "Examination";
+
+      html += `
+        <tr>
+          <td><strong>${examTitle}</strong></td>
+          <td>${res.marksObtained}</td>
+          <td>${res.maxMarks}</td>
+          <td>${res.percentage}%</td>
+          <td><span style="font-weight:700; color: #166534;">${res.grade}</span></td>
+        </tr>
+      `;
+    }
+
+    html += `</tbody></table></div>`;
+    container.innerHTML = html;
+  } catch (err) {
+    console.error("Error loading student report card:", err);
+    container.innerHTML = `<p class="placeholder-text">Unable to load report card.</p>`;
+  }
+    }
+
