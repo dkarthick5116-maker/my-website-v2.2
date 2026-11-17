@@ -222,7 +222,9 @@
         </button>
         <button type="button" class="s-nav-btn" onclick="switchStudentPanel('notices')">
           📢 <span class="text-en">Notices</span><span class="text-ta" style="display:none;">அறிவிப்புகள்</span>
-        </button>
+          <button type="button" class="s-nav-btn" onclick="switchStudentPanel('exams')">
+  📊 <span class="text-en">Report Card</span><span class="text-ta" style="display:none;">மதிப்பெண் பட்டியல்</span>
+   </button>
       </div>
 
       <!-- Student Panel 1: Homework & Submissions -->
@@ -251,7 +253,15 @@
           <p class="placeholder-text">Loading announcements...</p>
         </div>
       </div>
-  </section>
+      <!-- Student Panel 4: Exam Results / Report Cards -->
+<div id="spanel-exams" class="panel-card" style="display:none;">
+  <h3 class="text-en">My Exam Results & Report Card</h3>
+  <h3 class="text-ta" style="display:none;">தேர்வு முடிவுகள் மற்றும் அறிக்கை</h3>
+  <div id="student-exam-list" class="list-wrapper">
+    <p class="placeholder-text">Loading examination records...</p>
+  </div>
+</div>
+   </section>
      <!-- ================= TEACHER AUTH SECTION ================= -->
     <section id="teacher-section" class="auth-section" style="display:none;">
 
@@ -430,7 +440,9 @@
         </button>
         <button type="button" class="t-nav-btn" onclick="switchTeacherPanel('notices')">
           📢 <span class="text-en">Notices</span><span class="text-ta" style="display:none;">அறிவிப்புகள்</span>
-        </button>
+          <button type="button" class="t-nav-btn" onclick="switchTeacherPanel('exams')">
+  📊 <span class="text-en">Exams</span><span class="text-ta" style="display:none;">தேர்வுகள்</span>
+     </button>
       </div>
 
       <!-- Panel 1: Students Roster -->
@@ -647,10 +659,75 @@
           <p class="placeholder-text">Loading notices...</p>
         </div>
       </div>
+            <!-- Panel 6: Examination & Results Management -->
+      <div id="panel-exams" class="panel-card" style="display:none;">
+        <div class="panel-header">
+          <h3 class="text-en">Create Examination</h3>
+          <h3 class="text-ta" style="display:none;">புதிய தேர்வை உருவாக்கவும்</h3>
+        </div>
+        <form id="teacher-exam-form">
+          <div class="form-group">
+            <label class="text-en">Exam Title</label>
+            <label class="text-ta" style="display:none;">தேர்வின் பெயர்</label>
+            <input type="text" id="exam-title" placeholder="e.g. Mid-Term Examination 2026" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="text-en">Subject</label>
+              <label class="text-ta" style="display:none;">பாடம்</label>
+              <input type="text" id="exam-subject" placeholder="e.g. Mathematics" required>
+            </div>
+            <div class="form-group">
+              <label class="text-en">Target Class</label>
+              <label class="text-ta" style="display:none;">வகுப்பு</label>
+              <select id="exam-class" required>
+                <option value="6">Class 6</option>
+                <option value="7">Class 7</option>
+                <option value="8">Class 8</option>
+                <option value="9">Class 9</option>
+                <option value="10">Class 10</option>
+                <option value="11">Class 11</option>
+                <option value="12">Class 12</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="text-en">Exam Date</label>
+              <label class="text-ta" style="display:none;">தேர்வு தேதி</label>
+              <input type="date" id="exam-date" required>
+            </div>
+            <div class="form-group">
+              <label class="text-en">Maximum Marks</label>
+              <label class="text-ta" style="display:none;">அதிகபட்ச மதிப்பெண்கள்</label>
+              <input type="number" id="exam-max-marks" placeholder="100" min="1" max="500" required>
+            </div>
+          </div>
+          <button type="submit" class="btn primary-btn" id="exam-submit-btn">
+            <span class="text-en">Create Exam</span>
+            <span class="text-ta" style="display:none;">தேர்வை பதிவு செய்</span>
+          </button>
+        </form>
 
-    </section>
+        <h4 style="margin-top: 30px;" class="text-en">Scheduled Examinations</h4>
+        <h4 style="margin-top: 30px; display:none;" class="text-ta">அட்டவணைப்படுத்தப்பட்ட தேர்வுகள்</h4>
+        <div id="teacher-exam-list" class="list-wrapper">
+          <p class="placeholder-text">Loading examination list...</p>
+        </div>
 
-  </main>
+        <!-- Marks Entry Panel -->
+        <div id="exam-marks-container" class="item-card" style="display:none; margin-top: 25px; border-left-color: #166534; background: #f8fafc;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h4 id="exam-marks-title" style="color: #1a237e; margin: 0;">Enter Student Marks</h4>
+            <button type="button" class="btn" style="width: auto; padding: 4px 10px; background: #e2e8f0; color: #1e293b; font-size: 0.8rem;" onclick="closeMarksPanel()">✕ Close</button>
+          </div>
+          <div id="exam-marks-content">
+            <p class="placeholder-text">Loading student list for grading...</p>
+          </div>
+        </div>
+      </div>
+     </section>
+    </main>
 
   <!-- Firebase SDK Libraries (Compat Version) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
