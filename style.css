@@ -574,3 +574,78 @@ textarea {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+/* ==========================================
+   EXAMINATION & REPORT CARD EXTENSION STYLES
+   ========================================== */
+
+/* Compact Number Inputs in Tables */
+.styled-table input[type="number"],
+.styled-table input[type="text"] {
+  width: 75px;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  border: 1px solid #c5cae9;
+  border-radius: 6px;
+  text-align: center;
+  background-color: #f8fafc;
+}
+
+.styled-table input[type="number"]:focus,
+.styled-table input[type="text"]:focus {
+  border-color: #1a237e;
+  background-color: #ffffff;
+  outline: none;
+}
+
+/* Compact Table Action Buttons */
+.styled-table .btn {
+  display: inline-block;
+  width: auto;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  margin: 0;
+  vertical-align: middle;
+}
+
+/* Grade & Percentage Badges */
+.grade-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.grade-badge.grade-pass {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.grade-badge.grade-fail {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Examination Marks Drawer */
+#exam-marks-container {
+  border-top: 3px solid #166534;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.08);
+}
+
+/* Report Card Table Responsiveness */
+@media (max-width: 600px) {
+  .styled-table th,
+  .styled-table td {
+    padding: 8px 6px;
+    font-size: 0.8rem;
+  }
+
+  .styled-table input[type="number"] {
+    width: 60px;
+    padding: 4px;
+    font-size: 0.8rem;
+  }
+}
+
