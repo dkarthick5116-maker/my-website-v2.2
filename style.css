@@ -1,124 +1,367 @@
 /* ==========================================
-   TEACHER DASHBOARD & WORKSPACE STYLING
+   MY WEBSITE V2.2 - COMPLETE STYLESHEET
+   Mobile-First Educational Portal Design
    ========================================== */
 
-.dashboard-wrapper {
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 10px;
+/* --- Base & Reset Styles --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
-/* Header & Profile Card */
+body {
+  background-color: #f4f6f9;
+  color: #333333;
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Top Navigation Header --- */
+.top-nav {
+  background: #1a237e;
+  color: #ffffff;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.lang-switch {
+  display: flex;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 3px;
+  border-radius: 20px;
+}
+
+.lang-switch button {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lang-switch button.active-lang {
+  background: #ffffff;
+  color: #1a237e;
+}
+
+/* --- Main Layout Container --- */
+.main-container {
+  flex: 1;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* --- Role Selector (Student vs Teacher Tabs) --- */
+.role-selector {
+  display: flex;
+  background: #e8eaf6;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 20px;
+  gap: 4px;
+}
+
+.tab-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #3949ab;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.tab-btn.active {
+  background: #ffffff;
+  color: #1a237e;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Alert / Notification Box --- */
+.alert-box {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  word-break: break-word;
+}
+
+/* --- Auth Cards & Form Controls --- */
+.auth-section {
+  width: 100%;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.card h3 {
+  color: #1a237e;
+  font-size: 1.25rem;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="url"],
+select,
+textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #c5cae9;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  background-color: #ffffff;
+  color: #1f2937;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #1a237e;
+  box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* --- Buttons --- */
+.btn {
+  display: inline-block;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.primary-btn {
+  background-color: #1a237e;
+  color: #ffffff;
+  margin-top: 8px;
+}
+
+.primary-btn:hover {
+  background-color: #121858;
+}
+
+.primary-btn:disabled {
+  background-color: #9fa8da;
+  cursor: not-allowed;
+}
+
+.card-footer {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.card-footer p {
+  margin-top: 8px;
+}
+
+.card-footer a {
+  color: #1a237e;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.card-footer a:hover {
+  text-decoration: underline;
+}
+
+/* --- Dashboard Shared Styles --- */
+.dashboard-wrapper {
+  width: 100%;
+}
+
 .dashboard-header-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: #ffffff;
-  padding: 16px 20px;
+  padding: 16px 18px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  margin-bottom: 20px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 18px;
 }
 
 .teacher-info {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .avatar-circle {
-  width: 48px;
-  height: 48px;
-  background: #e8f0fe;
+  width: 44px;
+  height: 44px;
+  background: #e8eaf6;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 22px;
+  flex-shrink: 0;
 }
 
 .teacher-info h3 {
   margin: 0;
   color: #1a237e;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .school-subtitle {
   margin: 2px 0 0 0;
-  color: #5f6368;
-  font-size: 0.85rem;
+  color: #6b7280;
+  font-size: 0.82rem;
 }
 
 .logout-btn {
-  background: #d32f2f;
+  width: auto;
+  background: #dc2626;
   color: #ffffff;
-  border: none;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .logout-btn:hover {
-  background: #b71c1c;
+  background: #b91c1c;
 }
 
-/* Stats Overview Grid */
+/* --- Stats Grid (Teacher) --- */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
 .stat-card {
   background: #ffffff;
-  padding: 14px;
+  padding: 12px 10px;
   border-radius: 10px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border-top: 4px solid #1a237e;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  border-top: 3px solid #1a237e;
 }
 
 .stat-card h4 {
   margin: 0;
-  font-size: 0.8rem;
-  color: #5f6368;
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .stat-number {
   display: block;
-  font-size: 1.6rem;
-  font-weight: bold;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: #1a237e;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
-/* Horizontal Navigation Bar for Tabs */
+/* --- Dashboard Horizontal Tab Navigation --- */
 .teacher-tab-bar {
   display: flex;
   gap: 8px;
   overflow-x: auto;
   white-space: nowrap;
   padding-bottom: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 14px;
   -webkit-overflow-scrolling: touch;
+}
+
+.teacher-tab-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.teacher-tab-bar::-webkit-scrollbar-thumb {
+  background: #c5cae9;
+  border-radius: 4px;
 }
 
 .t-nav-btn {
   background: #e8eaf6;
   color: #283593;
   border: none;
-  padding: 10px 16px;
+  padding: 9px 14px;
   border-radius: 20px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
@@ -127,28 +370,51 @@
   color: #ffffff;
 }
 
-/* Panel Containers */
+.s-nav-btn {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.s-nav-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+/* --- Panels & Content Containers --- */
 .panel-card {
   background: #ffffff;
-  padding: 20px;
+  padding: 18px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
 }
 
 .panel-header {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
-.panel-header h3 {
-  margin: 0 0 12px 0;
+.panel-header h3,
+.panel-card h3 {
+  margin: 0 0 10px 0;
   color: #1a237e;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
 }
 
-/* Filters & Inputs */
+/* --- Filters & Search Controls --- */
 .filter-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -156,100 +422,155 @@
 .filter-row select {
   flex: 1;
   min-width: 140px;
-  padding: 10px;
-  border: 1px solid #c5cae9;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: 9px 10px;
+  font-size: 0.85rem;
 }
 
-/* Styled Table for Rosters */
+/* --- Roster Tables --- */
 .table-container {
   overflow-x: auto;
-  margin-top: 15px;
+  margin-top: 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .styled-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .styled-table th,
 .styled-table td {
-  padding: 12px 10px;
+  padding: 10px 12px;
   text-align: left;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .styled-table th {
-  background: #f5f5f5;
-  color: #333333;
+  background: #f9fafb;
+  color: #374151;
   font-weight: 600;
 }
 
 .styled-table tr:hover {
-  background: #f9f9f9;
+  background: #f9fafb;
 }
 
-/* Attendance List Rows */
+/* --- Attendance Roll-Call Rows --- */
 .attendance-list {
-  margin-top: 15px;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .attendance-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 10px;
-  border-bottom: 1px solid #eeeeee;
+  padding: 10px 12px;
+  background: #fdfdfd;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
 }
 
 .attendance-options {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .att-radio-label {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
 }
 
-/* Homework & Notice Card Items */
+/* --- Feed Cards (Homework, Notes, Notices) --- */
 .list-wrapper {
-  margin-top: 15px;
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
 .item-card {
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e5e7eb;
   border-left: 4px solid #1a237e;
   border-radius: 8px;
   padding: 14px;
-  background: #fafafa;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .item-card h5 {
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   color: #1a237e;
-  font-size: 1rem;
+  font-size: 0.98rem;
+  font-weight: 600;
 }
 
 .item-meta {
-  font-size: 0.8rem;
-  color: #616161;
+  font-size: 0.78rem;
+  color: #6b7280;
   margin-bottom: 8px;
 }
 
 .placeholder-text {
-  color: #757575;
-  font-size: 0.9rem;
+  color: #9ca3af;
+  font-size: 0.88rem;
   font-style: italic;
   text-align: center;
-  padding: 20px 0;
-   }
+  padding: 24px 0;
+}
+
+/* --- Responsive Adjustments for Mobile Screens --- */
+@media (max-width: 600px) {
+  .top-nav {
+    padding: 10px 12px;
+  }
+
+  .logo h2 {
+    font-size: 1rem;
+  }
+
+  .main-container {
+    padding: 10px;
+  }
+
+  .card {
+    padding: 18px 14px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .filter-row {
+    flex-direction: column;
+  }
+
+  .filter-row input,
+  .filter-row select {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .dashboard-header-card {
+    padding: 12px 14px;
+  }
+
+  .avatar-circle {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
