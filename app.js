@@ -1,13 +1,13 @@
 // ==========================================
 // MY WEBSITE V2.2 - CORE APPLICATION SCRIPT
-// Firebase Auth, Firestore & Storage Logic
+// Firebase Auth & Cloud Firestore (Spark Tier)
 // ==========================================
 
-// Global state variables
 let currentTeacherData = null;
+let currentStudentData = null;
 let cachedSchoolStudents = [];
 
-// --- Helper Functions ---
+// --- Notification Helpers ---
 function showMessage(text, isError = false) {
   const box = document.getElementById("alert-box");
   if (!box) return;
@@ -108,30 +108,201 @@ function showTeacherForgot() {
 // ==========================================
 auth.onAuthStateChanged(async (user) => {
   if (user) {
-    // Check if user is a teacher
     try {
+      // 1. Check if Teacher
       const teacherDoc = await db.collection("teachers").doc(user.uid).get();
       if (teacherDoc.exists) {
         currentTeacherData = teacherDoc.data();
         initTeacherDashboard(currentTeacherData);
+        return;
+      }
+
+      // 2. Check if Student
+      const studentDoc = await db.collection("students").doc(user.uid).get();
+      if (studentDoc.exists) {
+        currentStudentData = studentDoc.data();
+        initStudentDashboard(currentStudentData);
+        return;
       }
     } catch (err) {
-      console.error("Error fetching teacher profile:", err);
+      console.error("Auth state routing error:", err);
     }
   } else {
-    // Reset view to logged-out state
+    // Logged out
     currentTeacherData = null;
+    currentStudentData = null;
     document.getElementById("teacher-dashboard").style.display = "none";
+    document.getElementById("student-dashboard").style.display = "none";
     document.getElementById("role-selector-bar").style.display = "flex";
     switchRole("student");
   }
 });
 
-// Logout
 async function logoutUser() {
   clearMessage();
   await auth.signOut();
-  showMessage("You have been logged out successfully.");
+  showMessage("Logged out successfully.");
+}
+
+// ==========================================
+// STUDENT DASHBOARD LOGIC
+// ==========================================
+function initStudentDashboard(student) {
+  clearMessage();
+  document.getElementById("role-selector-bar").style.display = "none";
+  document.getElementById("student-section").style.display = "none";
+  document.getElementById("teacher-section").style.display = "none";
+
+  const sDash = document.getElementById("student-dashboard");
+  sDash.style.display = "block";
+
+  document.getElementById("s-display-name").textContent = student.name || "Student";
+  document.getElementById("s-display-meta").textContent = `Class ${student.classLevel} (${student.board}) - ${student.school}`;
+
+  loadStudentHomework(student);
+  loadStudentMaterials(student);
+  loadStudentNotices(student.school);
+}
+
+function switchStudentPanel(panel) {
+  ["hw", "mat", "notices"].forEach(p => {
+    const el = document.getElementById(`spanel-${p}`);
+    if (el) el.style.display = (p === panel) ? "block" : "none";
+  });
+
+  const btns = document.querySelectorAll(".s-nav-btn");
+  btns.forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("onclick").includes(panel));
+  });
+}
+
+async function loadStudentHomework(student) {
+  const container = document.getElementById("student-hw-list");
+  try {
+    const snapshot = await db.collection("homework")
+      .where("school", "==", student.school)
+      .where("classLevel", "==", student.classLevel)
+      .get();
+
+    if (snapshot.empty) {
+      container.innerHTML = `<p class="placeholder-text">No homework assigned for Class ${student.classLevel}.</p>`;
+      return;
+    }
+
+    let html = "";
+    snapshot.forEach(docSnap => {
+      const hw = docSnap.data();
+      const hwId = docSnap.id;
+      html += `
+        <div class="item-card">
+          <h5>${hw.title} - ${hw.subject}</h5>
+          <div class="item-meta">Deadline: ${hw.deadline} | Teacher: ${hw.teacherName || "School Teacher"}</div>
+          <p style="margin: 8px 0; font-size: 0.9rem;">${hw.instructions}</p>
+          ${hw.link ? `<p><a href="${hw.link}" target="_blank" style="color: #1a237e; font-weight: 600;">🔗 View Assignment Material</a></p>` : ""}
+          
+          <div style="margin-top: 10px; background: #ffffff; padding: 10px; border-radius: 6px; border: 1px dashed #c5cae9;">
+            <label style="font-size: 0.85rem; font-weight: 600; color: #1a237e;">Submit Answer / Google Drive Link:</label>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <input type="text" id="ans-${hwId}" placeholder="Enter Drive link or written answer..." style="flex:1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem;">
+              <button type="button" class="btn primary-btn" style="padding: 8px 12px; font-size: 0.85rem;" onclick="submitHomeworkAnswer('${hwId}', '${hw.title}')">Submit</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (err) {
+    console.error("Error loading student homework:", err);
+    container.innerHTML = `<p class="placeholder-text">Unable to load homework.</p>`;
+  }
+}
+
+async function submitHomeworkAnswer(hwId, hwTitle) {
+  const input = document.getElementById(`ans-${hwId}`);
+  const answer = input ? input.value.trim() : "";
+
+  if (!answer) {
+    alert("Please enter your answer or Google Drive link before submitting.");
+    return;
+  }
+
+  try {
+    const submissionId = `${hwId}_${currentStudentData.uid}`;
+    await db.collection("homeworkSubmissions").doc(submissionId).set({
+      homeworkId: hwId,
+      homeworkTitle: hwTitle,
+      studentUid: currentStudentData.uid,
+      studentName: currentStudentData.name,
+      studentRoll: currentStudentData.rollNumber,
+      school: currentStudentData.school,
+      classLevel: currentStudentData.classLevel,
+      submissionContent: answer,
+      submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      status: "Submitted"
+    });
+
+    alert("Homework submitted successfully to your teacher!");
+    input.value = "";
+  } catch (err) {
+    alert("Error submitting homework: " + err.message);
+  }
+}
+
+async function loadStudentMaterials(student) {
+  const container = document.getElementById("student-mat-list");
+  try {
+    const snapshot = await db.collection("materials")
+      .where("school", "==", student.school)
+      .where("classLevel", "==", student.classLevel)
+      .get();
+
+    if (snapshot.empty) {
+      container.innerHTML = `<p class="placeholder-text">No notes published for Class ${student.classLevel} yet.</p>`;
+      return;
+    }
+
+    let html = "";
+    snapshot.forEach(doc => {
+      const mat = doc.data();
+      html += `
+        <div class="item-card">
+          <h5>${mat.title} (${mat.subject})</h5>
+          <a href="${mat.link}" target="_blank" style="color: #1a237e; font-weight: 600; font-size: 0.85rem;">🔗 Open Study Material Link</a>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<p class="placeholder-text">Unable to load materials.</p>`;
+  }
+}
+
+async function loadStudentNotices(schoolName) {
+  const container = document.getElementById("student-not-list");
+  try {
+    const snapshot = await db.collection("notices")
+      .where("school", "==", schoolName)
+      .get();
+
+    if (snapshot.empty) {
+      container.innerHTML = `<p class="placeholder-text">No announcements at this time.</p>`;
+      return;
+    }
+
+    let html = "";
+    snapshot.forEach(doc => {
+      const not = doc.data();
+      html += `
+        <div class="item-card">
+          <h5>${not.title}</h5>
+          <p style="margin: 4px 0 0 0; font-size: 0.9rem;">${not.content}</p>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<p class="placeholder-text">Unable to load notices.</p>`;
+  }
 }
 
 // ==========================================
@@ -139,36 +310,29 @@ async function logoutUser() {
 // ==========================================
 function initTeacherDashboard(teacher) {
   clearMessage();
-  // Hide Auth Panels
   document.getElementById("role-selector-bar").style.display = "none";
   document.getElementById("student-section").style.display = "none";
   document.getElementById("teacher-section").style.display = "none";
 
-  // Show Teacher Dashboard
   const dashboard = document.getElementById("teacher-dashboard");
   dashboard.style.display = "block";
 
-  // Set Profile Information
   document.getElementById("t-display-name").textContent = teacher.name || "Teacher";
   document.getElementById("t-display-school").textContent = teacher.school || "School";
 
-  // Set today's date as default in attendance
   const dateInput = document.getElementById("att-date");
   if (dateInput) {
     dateInput.value = new Date().toISOString().split("T")[0];
   }
 
-  // Load Data
   loadTeacherStudentsRoster(teacher.school);
   loadTeacherHomework(teacher.school);
   loadTeacherMaterials(teacher.school);
   loadTeacherNotices(teacher.school);
 }
 
-// Teacher Workspace Tab Switcher
 function switchTeacherPanel(panelName) {
-  const panels = ["students", "attendance", "homework", "materials", "notices"];
-  panels.forEach(p => {
+  ["students", "attendance", "homework", "materials", "notices"].forEach(p => {
     const el = document.getElementById(`panel-${p}`);
     if (el) el.style.display = (p === panelName) ? "block" : "none";
   });
@@ -179,7 +343,7 @@ function switchTeacherPanel(panelName) {
   });
 }
 
-// --- Panel 1: Student Roster Management ---
+// --- Roster ---
 async function loadTeacherStudentsRoster(schoolName) {
   const tableBody = document.getElementById("roster-table-body");
   tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">Loading students...</td></tr>`;
@@ -194,9 +358,7 @@ async function loadTeacherStudentsRoster(schoolName) {
       cachedSchoolStudents.push(doc.data());
     });
 
-    // Update Stats Card
     document.getElementById("stat-total-students").textContent = cachedSchoolStudents.length;
-
     renderRosterTable(cachedSchoolStudents);
   } catch (err) {
     console.error("Error loading roster:", err);
@@ -207,7 +369,7 @@ async function loadTeacherStudentsRoster(schoolName) {
 function renderRosterTable(students) {
   const tableBody = document.getElementById("roster-table-body");
   if (students.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No students found for this selection.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No students found.</td></tr>`;
     return;
   }
 
@@ -239,7 +401,7 @@ function filterRosterTable() {
   renderRosterTable(filtered);
 }
 
-// --- Panel 2: Daily Attendance System ---
+// --- Attendance ---
 function loadAttendanceStudentList() {
   const selectedClass = document.getElementById("att-class-select").value;
   const listContainer = document.getElementById("att-student-list");
@@ -267,15 +429,9 @@ function loadAttendanceStudentList() {
           <strong>${s.rollNumber}</strong> - ${s.name}
         </div>
         <div class="attendance-options">
-          <label class="att-radio-label">
-            <input type="radio" name="att_${s.uid}" value="Present" checked> P
-          </label>
-          <label class="att-radio-label">
-            <input type="radio" name="att_${s.uid}" value="Absent"> A
-          </label>
-          <label class="att-radio-label">
-            <input type="radio" name="att_${s.uid}" value="Leave"> L
-          </label>
+          <label class="att-radio-label"><input type="radio" name="att_${s.uid}" value="Present" checked> P</label>
+          <label class="att-radio-label"><input type="radio" name="att_${s.uid}" value="Absent"> A</label>
+          <label class="att-radio-label"><input type="radio" name="att_${s.uid}" value="Leave"> L</label>
         </div>
       </div>
     `;
@@ -299,17 +455,14 @@ async function saveDailyAttendance() {
   saveBtn.textContent = "Saving...";
 
   const attendanceRecords = [];
-  const rows = document.querySelectorAll(".attendance-row");
-  rows.forEach(row => {
+  document.querySelectorAll(".attendance-row").forEach(row => {
     const uid = row.getAttribute("data-uid");
     const roll = row.getAttribute("data-roll");
     const name = row.getAttribute("data-name");
     const status = row.querySelector(`input[name="att_${uid}"]:checked`).value;
-
     attendanceRecords.push({ uid, roll, name, status });
   });
 
-  // Unique document ID prevents duplicate attendance for the same school, class, and date
   const docId = `${currentTeacherData.school}_Class${selectedClass}_${date}`.replace(/\s+/g, "_");
 
   try {
@@ -325,7 +478,6 @@ async function saveDailyAttendance() {
 
     alert("Attendance recorded successfully!");
   } catch (err) {
-    console.error("Error saving attendance:", err);
     alert("Failed to save attendance: " + err.message);
   } finally {
     saveBtn.disabled = false;
@@ -333,7 +485,7 @@ async function saveDailyAttendance() {
   }
 }
 
-// --- Panel 3: Homework Upload & Review ---
+// --- Homework Creation ---
 const homeworkForm = document.getElementById("teacher-homework-form");
 if (homeworkForm) {
   homeworkForm.addEventListener("submit", async (e) => {
@@ -345,31 +497,20 @@ if (homeworkForm) {
     const classLevel = document.getElementById("hw-class").value;
     const deadline = document.getElementById("hw-deadline").value;
     const instructions = document.getElementById("hw-instructions").value.trim();
-    const fileInput = document.getElementById("hw-file");
+    const link = document.getElementById("hw-link").value.trim();
     const submitBtn = document.getElementById("hw-submit-btn");
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Publishing...";
 
-    let downloadUrl = "";
-
     try {
-      // Upload file to Firebase Storage if selected
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const storageRef = firebase.storage().ref(`homework/${Date.now()}_${file.name}`);
-        const uploadSnapshot = await storageRef.put(file);
-        downloadUrl = await uploadSnapshot.ref.getDownloadURL();
-      }
-
-      // Save Homework Record in Firestore
       await db.collection("homework").add({
         title,
         subject,
         classLevel,
         deadline,
         instructions,
-        fileUrl: downloadUrl,
+        link: link,
         school: currentTeacherData.school,
         teacherId: currentTeacherData.uid,
         teacherName: currentTeacherData.name,
@@ -380,7 +521,6 @@ if (homeworkForm) {
       homeworkForm.reset();
       loadTeacherHomework(currentTeacherData.school);
     } catch (err) {
-      console.error("Error publishing homework:", err);
       alert("Failed to publish homework: " + err.message);
     } finally {
       submitBtn.disabled = false;
@@ -411,18 +551,17 @@ async function loadTeacherHomework(schoolName) {
           <h5>${hw.title} (${hw.subject})</h5>
           <div class="item-meta">Class: ${hw.classLevel} | Deadline: ${hw.deadline}</div>
           <p style="margin: 6px 0; font-size: 0.9rem;">${hw.instructions}</p>
-          ${hw.fileUrl ? `<a href="${hw.fileUrl}" target="_blank" style="color: #1a237e; font-size: 0.85rem; font-weight: 600;">📎 View Attached File</a>` : ""}
+          ${hw.link ? `<a href="${hw.link}" target="_blank" style="color: #1a237e; font-size: 0.85rem; font-weight: 600;">🔗 View Attached Link</a>` : ""}
         </div>
       `;
     });
     container.innerHTML = html;
   } catch (err) {
-    console.error("Error fetching homework:", err);
     container.innerHTML = `<p class="placeholder-text">Error loading homework.</p>`;
   }
 }
 
-// --- Panel 4: Study Materials ---
+// --- Materials ---
 const materialForm = document.getElementById("teacher-material-form");
 if (materialForm) {
   materialForm.addEventListener("submit", async (e) => {
@@ -482,7 +621,7 @@ async function loadTeacherMaterials(schoolName) {
   }
 }
 
-// --- Panel 5: Notices ---
+// --- Notices ---
 const noticeForm = document.getElementById("teacher-notice-form");
 if (noticeForm) {
   noticeForm.addEventListener("submit", async (e) => {
@@ -541,10 +680,10 @@ async function loadTeacherNotices(schoolName) {
 }
 
 // ==========================================
-// FORM SUBMISSIONS & FIREBASE AUTH INTEGRATION
+// AUTHENTICATION FORMS
 // ==========================================
 
-// 1. Student Registration
+// Student Registration
 const studentRegisterForm = document.getElementById("student-register-form");
 if (studentRegisterForm) {
   studentRegisterForm.addEventListener("submit", async (e) => {
@@ -580,7 +719,7 @@ if (studentRegisterForm) {
       toggleStudentMode("login");
     } catch (err) {
       if (err.code === "auth/email-already-in-use") {
-        showMessage("This RollNumber is already registered for this school.", true);
+        showMessage("This Roll Number is already registered for this school.", true);
       } else {
         showMessage(err.message, true);
       }
@@ -588,7 +727,7 @@ if (studentRegisterForm) {
   });
 }
 
-// 2. Student Login
+// Student Login
 const studentLoginForm = document.getElementById("student-login-form");
 if (studentLoginForm) {
   studentLoginForm.addEventListener("submit", async (e) => {
@@ -603,24 +742,23 @@ if (studentLoginForm) {
 
     try {
       await auth.signInWithEmailAndPassword(syntheticEmail, password);
-      showMessage("Welcome " + school + " student! Login successful.");
     } catch (err) {
       showMessage("Invalid School Name, Roll Number, or Password.", true);
     }
   });
 }
 
-// 3. Student Password Recovery
+// Student Password Recovery
 const studentRecoveryForm = document.getElementById("student-recovery-form");
 if (studentRecoveryForm) {
   studentRecoveryForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearMessage();
-    showMessage("Password reset request submitted. Contact your school administrator or teacher to complete recovery.", false);
+    showMessage("Password reset request submitted. Contact your school teacher.", false);
   });
 }
 
-// 4. Teacher Registration
+// Teacher Registration
 const teacherRegisterForm = document.getElementById("teacher-register-form");
 if (teacherRegisterForm) {
   teacherRegisterForm.addEventListener("submit", async (e) => {
@@ -645,7 +783,7 @@ if (teacherRegisterForm) {
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      showMessage("Teacher account registered successfully! You can now log in.");
+      showMessage("Teacher account registered! You can now log in.");
       teacherRegisterForm.reset();
       toggleTeacherMode("login");
     } catch (err) {
@@ -654,7 +792,7 @@ if (teacherRegisterForm) {
   });
 }
 
-// 5. Teacher Login
+// Teacher Login
 const teacherLoginForm = document.getElementById("teacher-login-form");
 if (teacherLoginForm) {
   teacherLoginForm.addEventListener("submit", async (e) => {
@@ -672,7 +810,7 @@ if (teacherLoginForm) {
   });
 }
 
-// 6. Teacher Password Reset
+// Teacher Password Reset
 const teacherForgotForm = document.getElementById("teacher-forgot-form");
 if (teacherForgotForm) {
   teacherForgotForm.addEventListener("submit", async (e) => {
@@ -683,10 +821,10 @@ if (teacherForgotForm) {
 
     try {
       await auth.sendPasswordResetEmail(email);
-      showMessage("Password reset email sent! Check your inbox for the link.");
+      showMessage("Password reset email sent! Check your inbox.");
       teacherForgotForm.reset();
     } catch (err) {
       showMessage(err.message, true);
     }
   });
-  }
+}
