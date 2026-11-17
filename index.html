@@ -196,6 +196,63 @@
       </div>
     </section>
 
+    <!-- ================= STUDENT DASHBOARD (AUTHENTICATED) ================= -->
+    <section id="student-dashboard" class="dashboard-wrapper" style="display:none;">
+      <div class="dashboard-header-card">
+        <div class="teacher-info">
+          <div class="avatar-circle">🎓</div>
+          <div>
+            <h3 id="s-display-name">Student Name</h3>
+            <p id="s-display-meta" class="school-subtitle">Class - School</p>
+          </div>
+        </div>
+        <button type="button" class="btn logout-btn" onclick="logoutUser()">
+          <span class="text-en">Logout</span>
+          <span class="text-ta" style="display:none;">வெளியேறு</span>
+        </button>
+      </div>
+
+      <!-- Student Navigation Tabs -->
+      <div class="teacher-tab-bar">
+        <button type="button" class="s-nav-btn active" onclick="switchStudentPanel('hw')">
+          📝 <span class="text-en">My Homework</span><span class="text-ta" style="display:none;">என் வீட்டுப்பாடம்</span>
+        </button>
+        <button type="button" class="s-nav-btn" onclick="switchStudentPanel('mat')">
+          📚 <span class="text-en">Study Notes</span><span class="text-ta" style="display:none;">பாடக்குறிப்புகள்</span>
+        </button>
+        <button type="button" class="s-nav-btn" onclick="switchStudentPanel('notices')">
+          📢 <span class="text-en">Notices</span><span class="text-ta" style="display:none;">அறிவிப்புகள்</span>
+        </button>
+      </div>
+
+      <!-- Student Panel 1: Homework & Submissions -->
+      <div id="spanel-hw" class="panel-card">
+        <h3 class="text-en">Assigned Homework</h3>
+        <h3 class="text-ta" style="display:none;">கொடுக்கப்பட்ட வீட்டுப்பாடங்கள்</h3>
+        <div id="student-hw-list" class="list-wrapper">
+          <p class="placeholder-text">Loading homework assignments...</p>
+        </div>
+      </div>
+
+      <!-- Student Panel 2: Notes & Materials -->
+      <div id="spanel-mat" class="panel-card" style="display:none;">
+        <h3 class="text-en">Class Study Materials</h3>
+        <h3 class="text-ta" style="display:none;">வகுப்பு பாடக்குறிப்புகள்</h3>
+        <div id="student-mat-list" class="list-wrapper">
+          <p class="placeholder-text">Loading study materials...</p>
+        </div>
+      </div>
+
+      <!-- Student Panel 3: School Notices -->
+      <div id="spanel-notices" class="panel-card" style="display:none;">
+        <h3 class="text-en">School Notice Board</h3>
+        <h3 class="text-ta" style="display:none;">பள்ளி அறிவிப்புப் பலகை</h3>
+        <div id="student-not-list" class="list-wrapper">
+          <p class="placeholder-text">Loading announcements...</p>
+        </div>
+      </div>
+    </section>
+
     <!-- ================= TEACHER AUTH SECTION ================= -->
     <section id="teacher-section" class="auth-section" style="display:none;">
 
@@ -484,9 +541,9 @@
             <textarea id="hw-instructions" rows="3" placeholder="Write homework details or problem numbers here..." required></textarea>
           </div>
           <div class="form-group">
-            <label class="text-en">Attach File (PDF / Image / DOC)</label>
-            <label class="text-ta" style="display:none;">கோப்பை இணைக்கவும் (PDF / Image / DOC)</label>
-            <input type="file" id="hw-file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+            <label class="text-en">Resource / Assignment Link (Google Drive / Doc URL)</label>
+            <label class="text-ta" style="display:none;">பாட இணைப்பு (கூகுள் டிரைவ் / டாக்ஸ் இணைப்பு)</label>
+            <input type="url" id="hw-link" placeholder="https://drive.google.com/...">
           </div>
           <button type="submit" class="btn primary-btn" id="hw-submit-btn">
             <span class="text-en">Publish Homework</span>
@@ -589,10 +646,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
   <!-- Website Configuration and Logic -->
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
-</html>
+  </html>
