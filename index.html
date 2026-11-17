@@ -20,8 +20,8 @@
   </header>
 
   <main class="main-container">
-    <!-- Portal Selection Tabs -->
-    <div class="role-selector">
+    <!-- Portal Selection Tabs (Visible when logged out) -->
+    <div id="role-selector-bar" class="role-selector">
       <button type="button" id="tab-student" class="tab-btn active" onclick="switchRole('student')">
         <span class="text-en">Student Portal</span>
         <span class="text-ta" style="display:none;">மாணவர் தளம்</span>
@@ -35,7 +35,7 @@
     <!-- Feedback Message Box -->
     <div id="alert-box" class="alert-box" style="display: none;"></div>
 
-    <!-- ================= STUDENT SECTION ================= -->
+    <!-- ================= STUDENT AUTH SECTION ================= -->
     <section id="student-section" class="auth-section">
 
       <!-- Student Login Form -->
@@ -196,7 +196,7 @@
       </div>
     </section>
 
-    <!-- ================= TEACHER SECTION ================= -->
+    <!-- ================= TEACHER AUTH SECTION ================= -->
     <section id="teacher-section" class="auth-section" style="display:none;">
 
       <!-- Teacher Login Form -->
@@ -315,16 +315,284 @@
         </div>
       </div>
     </section>
+
+    <!-- ================= TEACHER DASHBOARD (AUTHENTICATED) ================= -->
+    <section id="teacher-dashboard" class="dashboard-wrapper" style="display:none;">
+      
+      <!-- Top Profile & School Card -->
+      <div class="dashboard-header-card">
+        <div class="teacher-info">
+          <div class="avatar-circle">👨‍🏫</div>
+          <div>
+            <h3 id="t-display-name">Teacher Name</h3>
+            <p id="t-display-school" class="school-subtitle">School Name</p>
+          </div>
+        </div>
+        <button type="button" class="btn logout-btn" onclick="logoutUser()">
+          <span class="text-en">Logout</span>
+          <span class="text-ta" style="display:none;">வெளியேறு</span>
+        </button>
+      </div>
+
+      <!-- Overview Statistics Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h4 class="text-en">Total Students</h4>
+          <h4 class="text-ta" style="display:none;">மொத்த மாணவர்கள்</h4>
+          <span class="stat-number" id="stat-total-students">0</span>
+        </div>
+        <div class="stat-card">
+          <h4 class="text-en">Classes</h4>
+          <h4 class="text-ta" style="display:none;">வகுப்புகள்</h4>
+          <span class="stat-number" id="stat-total-classes">7</span>
+        </div>
+        <div class="stat-card">
+          <h4 class="text-en">Homework Active</h4>
+          <h4 class="text-ta" style="display:none;">வீட்டுப்பாடங்கள்</h4>
+          <span class="stat-number" id="stat-total-homework">0</span>
+        </div>
+        <div class="stat-card">
+          <h4 class="text-en">Notices</h4>
+          <h4 class="text-ta" style="display:none;">அறிவிப்புகள்</h4>
+          <span class="stat-number" id="stat-total-notices">0</span>
+        </div>
+      </div>
+
+      <!-- Teacher Navigation Tabs -->
+      <div class="teacher-tab-bar">
+        <button type="button" class="t-nav-btn active" onclick="switchTeacherPanel('students')">
+          👥 <span class="text-en">Students</span><span class="text-ta" style="display:none;">மாணவர்கள்</span>
+        </button>
+        <button type="button" class="t-nav-btn" onclick="switchTeacherPanel('attendance')">
+          📋 <span class="text-en">Attendance</span><span class="text-ta" style="display:none;">வருகைப்பதிவு</span>
+        </button>
+        <button type="button" class="t-nav-btn" onclick="switchTeacherPanel('homework')">
+          📝 <span class="text-en">Homework</span><span class="text-ta" style="display:none;">வீட்டுப்பாடம்</span>
+        </button>
+        <button type="button" class="t-nav-btn" onclick="switchTeacherPanel('materials')">
+          📚 <span class="text-en">Materials</span><span class="text-ta" style="display:none;">பாடக்குறிப்புகள்</span>
+        </button>
+        <button type="button" class="t-nav-btn" onclick="switchTeacherPanel('notices')">
+          📢 <span class="text-en">Notices</span><span class="text-ta" style="display:none;">அறிவிப்புகள்</span>
+        </button>
+      </div>
+
+      <!-- Panel 1: Students Roster -->
+      <div id="panel-students" class="panel-card">
+        <div class="panel-header">
+          <h3 class="text-en">Student Roster</h3>
+          <h3 class="text-ta" style="display:none;">மாணவர் பட்டியல்</h3>
+          <div class="filter-row">
+            <input type="text" id="roster-search" placeholder="Search by name / roll..." oninput="filterRosterTable()">
+            <select id="roster-class-filter" onchange="filterRosterTable()">
+              <option value="all">All Classes</option>
+              <option value="6">Class 6</option>
+              <option value="7">Class 7</option>
+              <option value="8">Class 8</option>
+              <option value="9">Class 9</option>
+              <option value="10">Class 10</option>
+              <option value="11">Class 11</option>
+              <option value="12">Class 12</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Roll No</th>
+                <th>Name</th>
+                <th>Class</th>
+                <th>Board</th>
+              </tr>
+            </thead>
+            <tbody id="roster-table-body">
+              <tr><td colspan="4" style="text-align: center;">Loading students...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Panel 2: Daily Attendance -->
+      <div id="panel-attendance" class="panel-card" style="display:none;">
+        <div class="panel-header">
+          <h3 class="text-en">Mark Daily Attendance</h3>
+          <h3 class="text-ta" style="display:none;">தினசரி வருகைப்பதிவு</h3>
+        </div>
+        <div class="filter-row">
+          <input type="date" id="att-date" required>
+          <select id="att-class-select" onchange="loadAttendanceStudentList()">
+            <option value="">Select Class</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+            <option value="11">Class 11</option>
+            <option value="12">Class 12</option>
+          </select>
+        </div>
+        <div id="att-student-list" class="attendance-list">
+          <p class="placeholder-text">Please select a class and date to mark attendance.</p>
+        </div>
+        <button type="button" id="save-attendance-btn" class="btn primary-btn" style="display:none; margin-top:15px;" onclick="saveDailyAttendance()">
+          <span class="text-en">Save Attendance</span>
+          <span class="text-ta" style="display:none;">வருகைப்பதிவை சேமிக்கவும்</span>
+        </button>
+      </div>
+
+      <!-- Panel 3: Homework Upload & Review -->
+      <div id="panel-homework" class="panel-card" style="display:none;">
+        <div class="panel-header">
+          <h3 class="text-en">Create Homework</h3>
+          <h3 class="text-ta" style="display:none;">புதிய வீட்டுப்பாடம்</h3>
+        </div>
+        <form id="teacher-homework-form">
+          <div class="form-group">
+            <label class="text-en">Homework Title</label>
+            <label class="text-ta" style="display:none;">வீட்டுப்பாடத்தின் தலைப்பு</label>
+            <input type="text" id="hw-title" placeholder="e.g. Unit 2 Exercise 2.1" required>
+          </div>
+          <div class="form-group">
+            <label class="text-en">Subject</label>
+            <label class="text-ta" style="display:none;">பாடம்</label>
+            <input type="text" id="hw-subject" placeholder="e.g. Mathematics" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="text-en">Target Class</label>
+              <label class="text-ta" style="display:none;">வகுப்பு</label>
+              <select id="hw-class" required>
+                <option value="6">Class 6</option>
+                <option value="7">Class 7</option>
+                <option value="8">Class 8</option>
+                <option value="9">Class 9</option>
+                <option value="10">Class 10</option>
+                <option value="11">Class 11</option>
+                <option value="12">Class 12</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="text-en">Submission Deadline</label>
+              <label class="text-ta" style="display:none;">சமர்ப்பிக்க கடைசி நாள்</label>
+              <input type="date" id="hw-deadline" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="text-en">Detailed Instructions</label>
+            <label class="text-ta" style="display:none;">முழு விபரம் / வழிகாட்டல்</label>
+            <textarea id="hw-instructions" rows="3" placeholder="Write homework details or problem numbers here..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="text-en">Attach File (PDF / Image / DOC)</label>
+            <label class="text-ta" style="display:none;">கோப்பை இணைக்கவும் (PDF / Image / DOC)</label>
+            <input type="file" id="hw-file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+          </div>
+          <button type="submit" class="btn primary-btn" id="hw-submit-btn">
+            <span class="text-en">Publish Homework</span>
+            <span class="text-ta" style="display:none;">வீட்டுப்பாடத்தை வெளியிடவும்</span>
+          </button>
+        </form>
+
+        <h4 style="margin-top: 30px;" class="text-en">Active Homework List</h4>
+        <h4 style="margin-top: 30px; display:none;" class="text-ta">செயலில் உள்ள வீட்டுப்பாடங்கள்</h4>
+        <div id="teacher-hw-list" class="list-wrapper">
+          <p class="placeholder-text">Loading homework records...</p>
+        </div>
+      </div>
+
+      <!-- Panel 4: Study Materials -->
+      <div id="panel-materials" class="panel-card" style="display:none;">
+        <div class="panel-header">
+          <h3 class="text-en">Share Study Material / Drive Links</h3>
+          <h3 class="text-ta" style="display:none;">பாடக்குறிப்புகளை பகிரவும்</h3>
+        </div>
+        <form id="teacher-material-form">
+          <div class="form-group">
+            <label class="text-en">Material Title</label>
+            <label class="text-ta" style="display:none;">தலைப்பு</label>
+            <input type="text" id="mat-title" placeholder="e.g. Chapter 1 Formula Sheet" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="text-en">Subject</label>
+              <label class="text-ta" style="display:none;">பாடம்</label>
+              <input type="text" id="mat-subject" placeholder="e.g. Science" required>
+            </div>
+            <div class="form-group">
+              <label class="text-en">Class</label>
+              <label class="text-ta" style="display:none;">வகுப்பு</label>
+              <select id="mat-class" required>
+                <option value="6">Class 6</option>
+                <option value="7">Class 7</option>
+                <option value="8">Class 8</option>
+                <option value="9">Class 9</option>
+                <option value="10">Class 10</option>
+                <option value="11">Class 11</option>
+                <option value="12">Class 12</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="text-en">Google Drive / Resource Link (URL)</label>
+            <label class="text-ta" style="display:none;">கூகுள் டிரைவ் / இணைய முகவரி</label>
+            <input type="url" id="mat-link" placeholder="https://drive.google.com/..." required>
+          </div>
+          <button type="submit" class="btn primary-btn">
+            <span class="text-en">Upload Material</span>
+            <span class="text-ta" style="display:none;">பாடக்குறிப்பை பதிவேற்றவும்</span>
+          </button>
+        </form>
+
+        <h4 style="margin-top: 30px;" class="text-en">Published Materials</h4>
+        <h4 style="margin-top: 30px; display:none;" class="text-ta">பதிவேற்றப்பட்ட குறிப்புகள்</h4>
+        <div id="teacher-mat-list" class="list-wrapper">
+          <p class="placeholder-text">Loading materials...</p>
+        </div>
+      </div>
+
+      <!-- Panel 5: School Notices -->
+      <div id="panel-notices" class="panel-card" style="display:none;">
+        <div class="panel-header">
+          <h3 class="text-en">Post Notice / Announcement</h3>
+          <h3 class="text-ta" style="display:none;">அறிவிப்பை வெளியிடவும்</h3>
+        </div>
+        <form id="teacher-notice-form">
+          <div class="form-group">
+            <label class="text-en">Notice Title</label>
+            <label class="text-ta" style="display:none;">தலைப்பு</label>
+            <input type="text" id="not-title" placeholder="e.g. Science Fair Submission Date" required>
+          </div>
+          <div class="form-group">
+            <label class="text-en">Announcement Details</label>
+            <label class="text-ta" style="display:none;">முழு தகவல்</label>
+            <textarea id="not-content" rows="3" placeholder="Write notice details..." required></textarea>
+          </div>
+          <button type="submit" class="btn primary-btn">
+            <span class="text-en">Publish Notice</span>
+            <span class="text-ta" style="display:none;">அறிவிப்பை வெளியிடவும்</span>
+          </button>
+        </form>
+
+        <h4 style="margin-top: 30px;" class="text-en">Notice Board History</h4>
+        <h4 style="margin-top: 30px; display:none;" class="text-ta">வெளியிடப்பட்ட அறிவிப்புகள்</h4>
+        <div id="teacher-not-list" class="list-wrapper">
+          <p class="placeholder-text">Loading notices...</p>
+        </div>
+      </div>
+
+    </section>
+
   </main>
 
   <!-- Firebase SDK Libraries (Compat Version) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
   <!-- Website Configuration and Logic -->
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
-              
