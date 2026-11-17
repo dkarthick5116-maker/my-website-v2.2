@@ -1,6 +1,6 @@
 // ==========================================
 // MY WEBSITE V2.2 - CORE APPLICATION SCRIPT
-// Firebase Auth & Cloud Firestore (Spark Tier)
+// Part 1: Helpers, Auth Routing & Student Dashboard
 // ==========================================
 
 let currentTeacherData = null;
@@ -125,10 +125,9 @@ auth.onAuthStateChanged(async (user) => {
         return;
       }
     } catch (err) {
-      console.error("Auth state routing error:", err);
+      console.error("Auth routing error:", err);
     }
   } else {
-    // Logged out
     currentTeacherData = null;
     currentStudentData = null;
     document.getElementById("teacher-dashboard").style.display = "none";
@@ -190,9 +189,15 @@ async function loadStudentHomework(student) {
     }
 
     let html = "";
-    snapshot.forEach(docSnap => {
+    for (const docSnap of snapshot.docs) {
       const hw = docSnap.data();
       const hwId = docSnap.id;
+      const submissionId = `${hwId}_${student.uid}`;
+
+      const subSnap = await db.collection("homeworkSubmissions").doc(submissionId).get();
+      const isSubmitted = subSnap.exists;
+      const subData = isSubmitted ? subSnap.data() : null;
+
       html += `
         <div class="item-card">
           <h5>${hw.title} - ${hw.subject}</h5>
@@ -200,16 +205,31 @@ async function loadStudentHomework(student) {
           <p style="margin: 8px 0; font-size: 0.9rem;">${hw.instructions}</p>
           ${hw.link ? `<p><a href="${hw.link}" target="_blank" style="color: #1a237e; font-weight: 600;">🔗 View Assignment Material</a></p>` : ""}
           
-          <div style="margin-top: 10px; background: #ffffff; padding: 10px; border-radius: 6px; border: 1px dashed #c5cae9;">
-            <label style="font-size: 0.85rem; font-weight: 600; color: #1a237e;">Submit Answer / Google Drive Link:</label>
-            <div style="display: flex; gap: 8px; margin-top: 6px;">
-              <input type="text" id="ans-${hwId}" placeholder="Enter Drive link or written answer..." style="flex:1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem;">
-              <button type="button" class="btn primary-btn" style="padding: 8px 12px; font-size: 0.85rem;" onclick="submitHomeworkAnswer('${hwId}', '${hw.title}')">Submit</button>
-            </div>
+          <div style="margin-top: 12px; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            ${isSubmitted ? `
+              <div style="font-size: 0.88rem; color: #166534; font-weight: 600;">
+                ✓ Submitted: <span style="font-weight: 400; color: #333;">${subData.submissionContent}</span>
+              </div>
+              ${subData.marks ? `
+                <div style="margin-top: 6px; font-size: 0.88rem; color: #1a237e; font-weight: 600;">
+                  Marks: ${subData.marks} | Feedback: ${subData.feedback || "Good job!"}
+                </div>
+              ` : `
+                <div style="margin-top: 4px; font-size: 0.8rem; color: #d97706;">
+                  Status: Under Review by Teacher
+                </div>
+              `}
+            ` : `
+              <label style="font-size: 0.85rem; font-weight: 600; color: #1a237e;">Submit Answer / Google Drive Link:</label>
+              <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <input type="text" id="ans-${hwId}" placeholder="Enter Drive link or written answer..." style="flex:1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem;">
+                <button type="button" class="btn primary-btn" style="padding: 8px 12px; font-size: 0.85rem; width: auto;" onclick="submitHomeworkAnswer('${hwId}', '${hw.title}')">Submit</button>
+              </div>
+            `}
           </div>
         </div>
       `;
-    });
+    }
     container.innerHTML = html;
   } catch (err) {
     console.error("Error loading student homework:", err);
@@ -238,11 +258,13 @@ async function submitHomeworkAnswer(hwId, hwTitle) {
       classLevel: currentStudentData.classLevel,
       submissionContent: answer,
       submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      status: "Submitted"
+      status: "Submitted",
+      marks: "",
+      feedback: ""
     });
 
     alert("Homework submitted successfully to your teacher!");
-    input.value = "";
+    loadStudentHomework(currentStudentData);
   } catch (err) {
     alert("Error submitting homework: " + err.message);
   }
@@ -303,11 +325,12 @@ async function loadStudentNotices(schoolName) {
   } catch (err) {
     container.innerHTML = `<p class="placeholder-text">Unable to load notices.</p>`;
   }
-}
+    }
+// ==========================================
+// MY WEBSITE V2.2 - CORE APPLICATION SCRIPT
+// Part 2: Teacher Dashboard & Auth Listeners
+// ==========================================
 
-// ==========================================
-// TEACHER DASHBOARD LOGIC
-// ==========================================
 function initTeacherDashboard(teacher) {
   clearMessage();
   document.getElementById("role-selector-bar").style.display = "none";
@@ -485,7 +508,7 @@ async function saveDailyAttendance() {
   }
 }
 
-// --- Homework Creation ---
+// --- Homework Creation & Review ---
 const homeworkForm = document.getElementById("teacher-homework-form");
 if (homeworkForm) {
   homeworkForm.addEventListener("submit", async (e) => {
@@ -546,12 +569,18 @@ async function loadTeacherHomework(schoolName) {
     let html = "";
     snapshot.forEach(doc => {
       const hw = doc.data();
+      const hwId = doc.id;
       html += `
         <div class="item-card">
           <h5>${hw.title} (${hw.subject})</h5>
           <div class="item-meta">Class: ${hw.classLevel} | Deadline: ${hw.deadline}</div>
           <p style="margin: 6px 0; font-size: 0.9rem;">${hw.instructions}</p>
-          ${hw.link ? `<a href="${hw.link}" target="_blank" style="color: #1a237e; font-size: 0.85rem; font-weight: 600;">🔗 View Attached Link</a>` : ""}
+          ${hw.link ? `<p><a href="${hw.link}" target="_blank" style="color: #1a237e; font-size: 0.85rem; font-weight: 600;">🔗 View Attached Link</a></p>` : ""}
+          <div style="margin-top: 10px;">
+            <button type="button" class="btn" style="width: auto; padding: 6px 14px; font-size: 0.85rem; background: #0284c7; color: #fff;" onclick="openReviewPanel('${hwId}', '${hw.title.replace(/'/g, "\\'")}')">
+              📋 Review Submissions
+            </button>
+          </div>
         </div>
       `;
     });
@@ -559,6 +588,99 @@ async function loadTeacherHomework(schoolName) {
   } catch (err) {
     container.innerHTML = `<p class="placeholder-text">Error loading homework.</p>`;
   }
+}
+
+// Open and Review Submissions for a Specific Homework
+async function openReviewPanel(hwId, hwTitle) {
+  const reviewContainer = document.getElementById("hw-review-container");
+  const reviewTitle = document.getElementById("hw-review-title");
+  const reviewContent = document.getElementById("hw-review-content");
+
+  reviewContainer.style.display = "block";
+  reviewTitle.textContent = `Submissions: ${hwTitle}`;
+  reviewContent.innerHTML = `<p class="placeholder-text">Loading student submissions...</p>`;
+  reviewContainer.scrollIntoView({ behavior: "smooth" });
+
+  try {
+    const snapshot = await db.collection("homeworkSubmissions")
+      .where("homeworkId", "==", hwId)
+      .get();
+
+    if (snapshot.empty) {
+      reviewContent.innerHTML = `<p class="placeholder-text">No students have submitted this homework yet.</p>`;
+      return;
+    }
+
+    let html = `
+      <div class="table-container">
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>Roll</th>
+              <th>Student Name</th>
+              <th>Submission / Link</th>
+              <th>Marks</th>
+              <th>Feedback</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    snapshot.forEach(docSnap => {
+      const sub = docSnap.data();
+      const subId = docSnap.id;
+      const isLink = sub.submissionContent.startsWith("http");
+
+      html += `
+        <tr>
+          <td><strong>${sub.studentRoll}</strong></td>
+          <td>${sub.studentName}</td>
+          <td>
+            ${isLink ? `<a href="${sub.submissionContent}" target="_blank" style="color:#0284c7; font-weight:600;">🔗 Open Answer</a>` : sub.submissionContent}
+          </td>
+          <td>
+            <input type="text" id="grade-mark-${subId}" value="${sub.marks || ""}" placeholder="e.g. 10/10" style="width: 70px; padding: 4px; font-size: 0.85rem;">
+          </td>
+          <td>
+            <input type="text" id="grade-feed-${subId}" value="${sub.feedback || ""}" placeholder="Comments..." style="width: 120px; padding: 4px; font-size: 0.85rem;">
+          </td>
+          <td>
+            <button type="button" class="btn" style="padding: 4px 10px; font-size: 0.8rem; background: #166534; color: #fff; width: auto;" onclick="saveHomeworkGrade('${subId}')">
+              Save
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table></div>`;
+    reviewContent.innerHTML = html;
+  } catch (err) {
+    console.error("Error loading submissions:", err);
+    reviewContent.innerHTML = `<p class="placeholder-text" style="color:red;">Error loading submissions: ${err.message}</p>`;
+  }
+}
+
+async function saveHomeworkGrade(subId) {
+  const marks = document.getElementById(`grade-mark-${subId}`).value.trim();
+  const feedback = document.getElementById(`grade-feed-${subId}`).value.trim();
+
+  try {
+    await db.collection("homeworkSubmissions").doc(subId).update({
+      marks: marks,
+      feedback: feedback,
+      status: "Reviewed",
+      gradedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Grade and feedback saved!");
+  } catch (err) {
+    alert("Failed to save grade: " + err.message);
+  }
+}
+
+function closeReviewPanel() {
+  document.getElementById("hw-review-container").style.display = "none";
 }
 
 // --- Materials ---
