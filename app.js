@@ -87,20 +87,22 @@ function showStudentForgot() {
   document.getElementById("student-register-box").style.display = "none";
   document.getElementById("student-recovery-box").style.display = "block";
 }
-
 // --- Teacher View Toggles ---
 function toggleTeacherMode(mode) {
   clearMessage();
-  document.getElementById("teacher-login-box").style.display = mode === "login" ? "block" : "none";
-  document.getElementById("teacher-register-box").style.display = mode === "register" ? "block" : "none";
-  document.getElementById("teacher-forgot-box").style.display = "none";
-}
+  const loginBox = document.getElementById("teacher-login-box");
+  const registerBox = document.getElementById("teacher-register-box");
+  const forgotBox = document.getElementById("teacher-forgot-box");
 
-function showTeacherForgot() {
-  clearMessage();
-  document.getElementById("teacher-login-box").style.display = "none";
-  document.getElementById("teacher-register-box").style.display = "none";
-  document.getElementById("teacher-forgot-box").style.display = "block";
+  if (loginBox) {
+    loginBox.style.display = mode === "login" ? "block" : "none";
+  }
+  if (registerBox) {
+    registerBox.style.display = mode === "register" ? "block" : "none";
+  }
+  if (forgotBox) {
+    forgotBox.style.display = "none";
+  }
 }
 
 // ==========================================
