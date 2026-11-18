@@ -1378,5 +1378,150 @@ async function loadStudentAttendanceSummary(student) {
     console.error("Error loading attendance:", err);
     summaryBox.innerHTML = `<p class="placeholder-text" style="color:red;">Error loading attendance: ${err.message}</p>`;
   }
-                                                                  }
+}
+// ==========================================
+// STUDENT REPORT CARD PRINT / PDF GENERATOR
+// ==========================================
+
+function printStudentReportCard() {
+  if (!currentStudentData) {
+    alert("Student session not found. Please log in again.");
+    return;
+  }
+
+  const tableContainer = document.querySelector("#student-exam-list .styled-table");
+  if (!tableContainer) {
+    alert("No examination results available to print.");
+    return;
+  }
+
+  const printWindow = window.open("", "_blank");
+  const currentDate = new Date().toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Report Card - ${currentStudentData.name || "Student"}</title>
+      <style>
+        @page {
+          size: A4 portrait;
+          margin: 20mm;
+        }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          color: #1e293b;
+          margin: 0;
+          padding: 20px;
+        }
+        .report-header {
+          text-align: center;
+          border-bottom: 2px solid #1a237e;
+          padding-bottom: 12px;
+          margin-bottom: 20px;
+        }
+        .report-header h1 {
+          margin: 0;
+          font-size: 24px;
+          color: #1a237e;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .report-header h3 {
+          margin: 6px 0 0;
+          font-size: 16px;
+          color: #475569;
+          font-weight: 500;
+        }
+        .student-details {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-bottom: 25px;
+          background: #f8fafc;
+          padding: 14px 18px;
+          border-radius: 6px;
+          border: 1px solid #e2e8f0;
+          font-size: 14px;
+        }
+        .student-details div {
+          line-height: 1.6;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 30px;
+          font-size: 14px;
+        }
+        th, td {
+          border: 1px solid #cbd5e1;
+          padding: 10px 12px;
+          text-align: center;
+        }
+        th {
+          background-color: #f1f5f9;
+          color: #0f172a;
+          font-weight: 600;
+        }
+        td:first-child {
+          text-align: left;
+        }
+        .signature-section {
+          margin-top: 60px;
+          display: flex;
+          justify-content: space-between;
+          padding: 0 20px;
+          font-size: 14px;
+          font-weight: 600;
+          color: #334155;
+        }
+        .signature-box {
+          border-top: 1px solid #64748b;
+          width: 180px;
+          text-align: center;
+          padding-top: 6px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="report-header">
+        <h1>${currentStudentData.school || "School Educational Portal"}</h1>
+        <h3>Official Student Progress Report Card</h3>
+      </div>
+
+      <div class="student-details">
+        <div>
+          <strong>Student Name:</strong> ${currentStudentData.name || "-"}<br>
+          <strong>Roll Number:</strong> ${currentStudentData.rollNumber || "-"}
+        </div>
+        <div>
+          <strong>Class:</strong> ${currentStudentData.classLevel || "-"} (${currentStudentData.curriculumBoard || "State Board"})<br>
+          <strong>Issue Date:</strong> ${currentDate}
+        </div>
+      </div>
+
+      ${tableContainer.outerHTML}
+
+      <div class="signature-section">
+        <div class="signature-box">Class Teacher</div>
+        <div class="signature-box">Principal</div>
+      </div>
+
+      <script>
+        window.onload = function() {
+          window.print();
+        };
+      </script>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+}
+
 
