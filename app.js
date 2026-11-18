@@ -1573,5 +1573,40 @@ function printStudentReportCard() {
 
   printWindow.document.close();
 }
+// ==========================================
+// PUSH NOTIFICATION HELPERS
+// ==========================================
+
+async function requestNotificationPermission() {
+  if (!("Notification" in window)) {
+    console.log("This browser does not support desktop notifications.");
+    return false;
+  }
+
+  if (Notification.permission === "granted") {
+    return true;
+  }
+
+  if (Notification.permission !== "denied") {
+    const permission = await Notification.requestPermission();
+    return permission === "granted";
+  }
+
+  return false;
+}
+
+// Function to trigger a local alert notification
+function sendLocalNotification(title, body) {
+  if (Notification.permission === "granted" && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.showNotification(title, {
+        body: body,
+        icon: "https://cdn-icons-png.flaticon.com/512/2997/2997295.png",
+        badge: "https://cdn-icons-png.flaticon.com/512/2997/2997295.png",
+        vibrate: [100, 50, 100]
+      });
+    });
+  }
+}
 
 
