@@ -1222,7 +1222,8 @@ async function saveStudentExamMark(examId, studentUid, rollNumber, studentName, 
     document.getElementById(`grade-${studentUid}`).innerHTML = `<strong>${grade}</strong>`;
 
     alert(`Marks recorded for ${studentName}: ${markVal}/${maxMarks} (${grade})`);
-  } catch (err) {
+ openExamMarksPanel(examId, document.getElementById("exam-marks-title").textContent.split(" (")[0], classLevel, maxMarks);
+      }  catch (err) {
     console.error("Error saving mark:", err);
     alert("Failed to save mark: " + err.message);
   }
