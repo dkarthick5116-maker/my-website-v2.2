@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- PWA Configuration -->
+  <!-- PWA Configuration & Custom App Icons -->
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="./IMG_20261118_172023.jpg">
+  <link rel="icon" type="image/jpeg" href="./IMG_20261118_172023.jpg">
   <link rel="apple-touch-icon" href="./IMG_20261118_172023.jpg">
-  <meta name="theme-color" content="#2a75bb">
+  <meta name="theme-color" content="#1e3a8a">
 
   <!-- Service Worker Registration -->
   <script>
@@ -21,19 +21,19 @@
     }
   </script>
 
-  <title>Learning Portal V2.2 - Tamil Nadu State Board</title>
+  <title>Education Portal V2.2 - Tamil Nadu State Board</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Top Navigation & Language Switcher -->
+  <!-- Top Blue Navigation Bar -->
   <header class="top-nav">
     <div class="logo">
       <h2 id="portal-title">Education Portal V2.2</h2>
     </div>
     <div class="lang-switch">
       <!-- In-App PWA Install Button -->
-      <button type="button" id="pwa-install-btn" style="display: none; background: #ffcb05; color: #003a70; border: 2px solid #ffffff; font-weight: bold; padding: 4px 10px; border-radius: 6px; cursor: pointer; margin-right: 6px; font-size: 12px;">📲 Install App</button>
+      <button type="button" id="pwa-install-btn" style="display: none; background: #ffcb05; color: #1e3a8a; border: 2px solid #ffffff; font-weight: bold; padding: 4px 10px; border-radius: 6px; cursor: pointer; margin-right: 6px; font-size: 12px;">📲 Install App</button>
       <button type="button" id="lang-en" class="active-lang">English</button>
       <button type="button" id="lang-ta">தமிழ்</button>
     </div>
@@ -44,7 +44,7 @@
     <!-- Global Alert / Status Message Banner -->
     <div id="status-message" class="status-msg" style="display: none;"></div>
 
-    <!-- Portal Selection Tabs -->
+    <!-- Portal Selection Tabs (Student / Teacher) -->
     <div id="role-selector-bar" class="role-selector">
       <button type="button" id="tab-student" class="tab-btn active" onclick="switchRole('student')">
         <span class="text-en">Student Portal</span>
@@ -55,8 +55,7 @@
         <span class="text-ta" style="display:none;">ஆசிரியர் தளம்</span>
       </button>
     </div>
-
-    <!-- ================= STUDENT AUTH SECTION ================= -->
+        <!-- ================= STUDENT AUTH SECTION ================= -->
     <section id="student-section" class="auth-section">
 
       <!-- Student Login Form -->
@@ -71,6 +70,7 @@
             <select id="stud-login-school" required>
               <option value="">-- Choose School --</option>
               <option value="GHSS salem">GHSS salem</option>
+              <option value="GHSS Chennai">GHSS Chennai</option>
               <option value="GHS Namakkal">GHS Namakkal</option>
             </select>
           </div>
@@ -85,6 +85,20 @@
               <option value="Class 8">Class 8 (State Board)</option>
               <option value="Class 9">Class 9 (State Board)</option>
               <option value="Class 10">Class 10 (State Board)</option>
+              <option value="Class 11">Class 11 (State Board)</option>
+              <option value="Class 12">Class 12 (State Board)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Section</label>
+            <label class="text-ta" style="display:none;">பிரிவு</label>
+            <select id="stud-login-section" required>
+              <option value="">-- Select Section --</option>
+              <option value="Section - A">Section - A</option>
+              <option value="Section - B">Section - B</option>
+              <option value="Section - C">Section - C</option>
+              <option value="Section - D">Section - D</option>
             </select>
           </div>
 
@@ -130,6 +144,7 @@
             <select id="stud-reg-school" required>
               <option value="">-- Choose School --</option>
               <option value="GHSS salem">GHSS salem</option>
+              <option value="GHSS Chennai">GHSS Chennai</option>
               <option value="GHS Namakkal">GHS Namakkal</option>
             </select>
           </div>
@@ -144,6 +159,20 @@
               <option value="Class 8">Class 8 (State Board)</option>
               <option value="Class 9">Class 9 (State Board)</option>
               <option value="Class 10">Class 10 (State Board)</option>
+              <option value="Class 11">Class 11 (State Board)</option>
+              <option value="Class 12">Class 12 (State Board)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Section</label>
+            <label class="text-ta" style="display:none;">பிரிவு</label>
+            <select id="stud-reg-section" required>
+              <option value="">-- Select Section --</option>
+              <option value="Section - A">Section - A</option>
+              <option value="Section - B">Section - B</option>
+              <option value="Section - C">Section - C</option>
+              <option value="Section - D">Section - D</option>
             </select>
           </div>
 
@@ -200,7 +229,7 @@
 
         <div class="card-footer">
           <p>
-            <a href="#" onclick="showTeacherForgot(); return false;">
+            <a href="#" onclick="toggleTeacherMode('forgot'); return false;">
               <span class="text-en">Forgot Password?</span>
               <span class="text-ta" style="display:none;">கடவுச்சொல்லை மறந்துவிட்டீர்களா?</span>
             </a>
@@ -226,6 +255,41 @@
             <label class="text-en">Full Name</label>
             <label class="text-ta" style="display:none;">முழுப் பெயர்</label>
             <input type="text" id="teach-reg-name" placeholder="Teacher Name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">School Name</label>
+            <label class="text-ta" style="display:none;">பள்ளியின் பெயர்</label>
+            <select id="teach-reg-school" required>
+              <option value="GHSS salem">GHSS salem</option>
+              <option value="GHSS Chennai">GHSS Chennai</option>
+              <option value="GHS Namakkal">GHS Namakkal</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Class in Charge</label>
+            <label class="text-ta" style="display:none;">பொறுப்பு வகுப்பு</label>
+            <select id="teach-reg-class" required>
+              <option value="Class 6">Class 6</option>
+              <option value="Class 7">Class 7</option>
+              <option value="Class 8">Class 8</option>
+              <option value="Class 9">Class 9</option>
+              <option value="Class 10">Class 10</option>
+              <option value="Class 11">Class 11</option>
+              <option value="Class 12">Class 12</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="text-en">Section</label>
+            <label class="text-ta" style="display:none;">பிரிவு</label>
+            <select id="teach-reg-section" required>
+              <option value="Section - A">Section - A</option>
+              <option value="Section - B">Section - B</option>
+              <option value="Section - C">Section - C</option>
+              <option value="Section - D">Section - D</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -292,45 +356,256 @@
       <div class="dashboard-header card">
         <div class="user-meta">
           <h3 id="s-display-name">Student Name</h3>
-          <p id="s-display-meta" class="sub-text">Class 6 (State Board) - GHSS Salem</p>
+          <p id="s-display-meta" class="sub-text">Class 6 (Section - A) - GHSS salem</p>
         </div>
         <button type="button" class="btn danger-btn" onclick="logoutStudent()">Logout</button>
       </div>
 
       <div class="sub-nav-tabs">
-        <button class="sub-tab-btn active" onclick="switchStudentTab('homework')">📚 My Homework</button>
-        <button class="sub-tab-btn" onclick="switchStudentTab('notes')">📖 Study Notes</button>
-        <button class="sub-tab-btn" onclick="switchStudentTab('notices')">📢 Notices</button>
+        <button type="button" class="sub-tab-btn active" onclick="switchStudentTab('homework')">📝 My Homework</button>
+        <button type="button" class="sub-tab-btn" onclick="switchStudentTab('notes')">📚 Study Notes</button>
+        <button type="button" class="sub-tab-btn" onclick="switchStudentTab('notices')">📢 Notices</button>
       </div>
 
       <div id="student-tab-content" class="content-container">
-        <!-- Rendered dynamically by app.js -->
         <div id="student-homework-container"></div>
         <div id="student-notes-container" style="display: none;"></div>
         <div id="student-notices-container" style="display: none;"></div>
       </div>
-    </section>
-
-    <!-- ================= TEACHER DASHBOARD ================= -->
+  </section>
+      <!-- ================= TEACHER DASHBOARD ================= -->
     <section id="teacher-dashboard" class="dashboard-section" style="display: none;">
-      <div class="dashboard-header card">
-        <div class="user-meta">
-          <h3 id="t-display-name">Teacher Name</h3>
-          <p id="t-display-email" class="sub-text">teacher@school.com</p>
+      
+      <!-- Teacher Top Profile Card with Logout -->
+      <div class="teacher-profile-card card">
+        <div class="profile-info">
+          <div class="profile-avatar">👨‍🏫</div>
+          <div>
+            <h3 id="t-display-name">Teacher</h3>
+            <p id="t-display-school" class="sub-text">GHSS Chennai</p>
+          </div>
         </div>
-        <button type="button" class="btn danger-btn" onclick="logoutTeacher()">Logout</button>
+        <button type="button" class="btn danger-btn logout-btn" onclick="logoutTeacher()">Logout</button>
       </div>
 
-      <div class="sub-nav-tabs">
-        <button class="sub-tab-btn active" onclick="switchTeacherTab('post-homework')">Assign Homework</button>
-        <button class="sub-tab-btn" onclick="switchTeacherTab('post-notes')">Upload Notes</button>
-        <button class="sub-tab-btn" onclick="switchTeacherTab('post-notice')">School Circulars</button>
+      <!-- 4 Stats Cards Grid -->
+      <div class="stats-grid">
+        <div class="stat-card card">
+          <span class="stat-title">TOTAL STUDENTS</span>
+          <span class="stat-value" id="stat-students">1</span>
+        </div>
+        <div class="stat-card card">
+          <span class="stat-title">CLASSES</span>
+          <span class="stat-value" id="stat-classes">7</span>
+        </div>
+        <div class="stat-card card">
+          <span class="stat-title">HOMEWORK ACTIVE</span>
+          <span class="stat-value" id="stat-homework">1</span>
+        </div>
+        <div class="stat-card card">
+          <span class="stat-title">NOTICES</span>
+          <span class="stat-value" id="stat-notices">1</span>
+        </div>
       </div>
 
-      <div id="teacher-tab-content" class="content-container card">
-        <!-- Forms rendered dynamically via app.js -->
-        <div id="teacher-active-form-area"></div>
+      <!-- Teacher Navigation Pill Tabs -->
+      <div class="sub-nav-tabs teacher-tabs">
+        <button type="button" id="tab-t-students" class="sub-tab-btn" onclick="switchTeacherTab('students')">👥 Students</button>
+        <button type="button" id="tab-t-attendance" class="sub-tab-btn" onclick="switchTeacherTab('attendance')">📅 Attendance</button>
+        <button type="button" id="tab-t-homework" class="sub-tab-btn active" onclick="switchTeacherTab('homework')">📝 Homework</button>
+        <button type="button" id="tab-t-materials" class="sub-tab-btn" onclick="switchTeacherTab('materials')">📚 Materials</button>
+        <button type="button" id="tab-t-notices" class="sub-tab-btn" onclick="switchTeacherTab('notices')">📢 Notices</button>
       </div>
+
+      <!-- Tab 1: Student Roster -->
+      <div id="teacher-panel-students" class="tab-panel card" style="display: none;">
+        <h3>Student Roster</h3>
+        <div class="filter-row">
+          <input type="text" id="roster-search" placeholder="Search by name / roll...">
+          <select id="roster-class-filter" onchange="filterRoster()">
+            <option value="all">All Classes</option>
+            <option value="Class 6">Class 6</option>
+            <option value="Class 7">Class 7</option>
+            <option value="Class 8">Class 8</option>
+            <option value="Class 9">Class 9</option>
+            <option value="Class 10">Class 10</option>
+            <option value="Class 11">Class 11</option>
+            <option value="Class 12">Class 12</option>
+          </select>
+          <select id="roster-section-filter" onchange="filterRoster()">
+            <option value="all">All Sections</option>
+            <option value="Section - A">Section - A</option>
+            <option value="Section - B">Section - B</option>
+            <option value="Section - C">Section - C</option>
+            <option value="Section - D">Section - D</option>
+          </select>
+        </div>
+        <div class="table-responsive">
+          <table class="roster-table">
+            <thead>
+              <tr>
+                <th>Roll No</th>
+                <th>Name</th>
+                <th>Class</th>
+                <th>Section</th>
+                <th>Board</th>
+              </tr>
+            </thead>
+            <tbody id="roster-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 2: Mark Daily Attendance -->
+      <div id="teacher-panel-attendance" class="tab-panel card" style="display: none;">
+        <h3>Mark Daily Attendance</h3>
+        <div class="form-group">
+          <input type="date" id="att-date" required>
+        </div>
+        <div class="form-group">
+          <select id="att-class-select" onchange="loadAttendanceList()">
+            <option value="Class 6">Class 6</option>
+            <option value="Class 7">Class 7</option>
+            <option value="Class 8">Class 8</option>
+            <option value="Class 9">Class 9</option>
+            <option value="Class 10">Class 10</option>
+            <option value="Class 11">Class 11</option>
+            <option value="Class 12">Class 12</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <select id="att-section-select" onchange="loadAttendanceList()">
+            <option value="Section - A">Section - A</option>
+            <option value="Section - B">Section - B</option>
+            <option value="Section - C">Section - C</option>
+            <option value="Section - D">Section - D</option>
+          </select>
+        </div>
+        <div id="attendance-list-container">
+          <!-- Student list with P / A / L radio buttons -->
+        </div>
+        <button type="button" class="btn primary-btn" id="btn-save-attendance" onclick="saveAttendance()">Save Attendance</button>
+      </div>
+
+      <!-- Tab 3: Create & Manage Homework -->
+      <div id="teacher-panel-homework" class="tab-panel">
+        <div class="card">
+          <h3>Create Homework</h3>
+          <form id="teacher-homework-form">
+            <div class="form-group">
+              <label>Homework Title</label>
+              <input type="text" id="hw-title" placeholder="e.g. Unit 2 Exercise 2.1" required>
+            </div>
+            <div class="form-group">
+              <label>Subject</label>
+              <input type="text" id="hw-subject" placeholder="e.g. Mathematics" required>
+            </div>
+            <div class="form-group">
+              <label>Target Class</label>
+              <select id="hw-class" required>
+                <option value="Class 6">Class 6</option>
+                <option value="Class 7">Class 7</option>
+                <option value="Class 8">Class 8</option>
+                <option value="Class 9">Class 9</option>
+                <option value="Class 10">Class 10</option>
+                <option value="Class 11">Class 11</option>
+                <option value="Class 12">Class 12</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Target Section</label>
+              <select id="hw-section" required>
+                <option value="All Sections">All Sections</option>
+                <option value="Section - A">Section - A</option>
+                <option value="Section - B">Section - B</option>
+                <option value="Section - C">Section - C</option>
+                <option value="Section - D">Section - D</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Submission Deadline</label>
+              <input type="date" id="hw-deadline" required>
+            </div>
+            <div class="form-group">
+              <label>Detailed Instructions</label>
+              <textarea id="hw-desc" rows="3" placeholder="Write homework details or problem numbers here..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Resource / Assignment Link (Google Drive / Doc URL)</label>
+              <input type="url" id="hw-link" placeholder="https://drive.google.com/...">
+            </div>
+            <button type="submit" class="btn primary-btn" id="btn-publish-hw">Publish Homework</button>
+          </form>
+        </div>
+
+        <div class="card" style="margin-top: 15px;">
+          <h3>Active Homework List</h3>
+          <div id="teacher-hw-list">
+            <!-- Active homework cards rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Share Study Material / Drive Links -->
+      <div id="teacher-panel-materials" class="tab-panel card" style="display: none;">
+        <h3>Share Study Material / Drive Links</h3>
+        <form id="teacher-materials-form">
+          <div class="form-group">
+            <label>Material Title</label>
+            <input type="text" id="mat-title" placeholder="e.g. Chapter 1 Formula Sheet" required>
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <input type="text" id="mat-subject" placeholder="e.g. Science" required>
+          </div>
+          <div class="form-group">
+            <label>Class</label>
+            <select id="mat-class" required>
+              <option value="Class 6">Class 6</option>
+              <option value="Class 7">Class 7</option>
+              <option value="Class 8">Class 8</option>
+              <option value="Class 9">Class 9</option>
+              <option value="Class 10">Class 10</option>
+              <option value="Class 11">Class 11</option>
+              <option value="Class 12">Class 12</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Google Drive / Resource Link (URL)</label>
+            <input type="url" id="mat-link" placeholder="https://drive.google.com/..." required>
+          </div>
+          <button type="submit" class="btn primary-btn">Upload Material</button>
+        </form>
+
+        <h4 style="margin-top: 20px;">Published Materials</h4>
+        <div id="teacher-materials-list">
+          <!-- Study material items rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Tab 5: Post Notice / Announcement -->
+      <div id="teacher-panel-notices" class="tab-panel card" style="display: none;">
+        <h3>Post Notice / Announcement</h3>
+        <form id="teacher-notice-form">
+          <div class="form-group">
+            <label>Notice Title</label>
+            <input type="text" id="notice-title" placeholder="e.g. Science Fair Submission Date" required>
+          </div>
+          <div class="form-group">
+            <label>Announcement Details</label>
+            <textarea id="notice-desc" rows="4" placeholder="Write notice details..." required></textarea>
+          </div>
+          <button type="submit" class="btn primary-btn">Publish Notice</button>
+        </form>
+
+        <h4 style="margin-top: 20px;">Notice Board History</h4>
+        <div id="teacher-notices-history">
+          <!-- Announcements history rendered dynamically -->
+        </div>
+      </div>
+
     </section>
 
   </main>
@@ -340,7 +615,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <!-- Firebase Configurations and Application Logic -->
+  <!-- Application Configuration & Logic -->
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
