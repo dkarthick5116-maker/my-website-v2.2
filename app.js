@@ -1254,4 +1254,129 @@ async function loadStudentReportCard(studentUid) {
     container.innerHTML = `<p class="placeholder-text">Unable to load report card.</p>`;
   }
     }
+// ==========================================
+// STUDENT ATTENDANCE SUMMARY MODULE
+// ==========================================
+
+// Extend student panel switcher to handle 'attendance'
+const priorSwitchStudentPanel = window.switchStudentPanel;
+window.switchStudentPanel = function(panel) {
+  const panels = ["hw", "mat", "notices", "exams", "attendance"];
+  panels.forEach(p => {
+    const el = document.getElementById(`spanel-${p}`);
+    if (el) el.style.display = (p === panel) ? "block" : "none";
+  });
+
+  const btns = document.querySelectorAll(".s-nav-btn");
+  btns.forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("onclick").includes(panel));
+  });
+
+  if (panel === "attendance" && currentStudentData) {
+    loadStudentAttendanceSummary(currentStudentData);
+  } else if (panel === "exams" && currentStudentData) {
+    loadStudentReportCard(currentStudentData.uid);
+  }
+};
+
+async function loadStudentAttendanceSummary(student) {
+  const summaryBox = document.getElementById("student-att-summary");
+  const historyBox = document.getElementById("student-att-history");
+  if (!summaryBox || !historyBox) return;
+
+  try {
+    const snapshot = await db.collection("attendance")
+      .where("school", "==", student.school)
+      .where("classLevel", "==", student.classLevel)
+      .get();
+
+    if (snapshot.empty) {
+      summaryBox.innerHTML = `<p class="placeholder-text">No attendance sessions recorded yet for Class ${student.classLevel}.</p>`;
+      historyBox.innerHTML = "";
+      return;
+    }
+
+    let totalSessions = 0;
+    let presentCount = 0;
+    let absentCount = 0;
+    let leaveCount = 0;
+    const historyRows = [];
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const studentRecord = (data.records || []).find(r => r.uid === student.uid || r.roll === student.rollNumber);
+
+      if (studentRecord) {
+        totalSessions++;
+        const status = studentRecord.status;
+        if (status === "Present") presentCount++;
+        else if (status === "Absent") absentCount++;
+        else if (status === "Leave") leaveCount++;
+
+        historyRows.push({
+          date: data.date,
+          status: status
+        });
+      }
+    });
+
+    if (totalSessions === 0) {
+      summaryBox.innerHTML = `<p class="placeholder-text">No personal attendance records found for your roll number.</p>`;
+      historyBox.innerHTML = "";
+      return;
+    }
+
+    // Sort by date descending
+    historyRows.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const percentage = Math.round((presentCount / totalSessions) * 100);
+    const color = percentage >= 75 ? "#166534" : (percentage >= 60 ? "#d97706" : "#dc2626");
+
+    summaryBox.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h4 style="margin:0; font-size: 1.1rem; color: #1a237e;">Overall Attendance</h4>
+          <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #64748b;">
+            Present: <strong>${presentCount}</strong> / ${totalSessions} Days | Absent: ${absentCount} | Leave: ${leaveCount}
+          </p>
+        </div>
+        <div style="font-size: 1.6rem; font-weight: 800; color: ${color};">
+          ${percentage}%
+        </div>
+      </div>
+      <div style="margin-top: 12px; background: #e2e8f0; border-radius: 8px; height: 10px; overflow: hidden;">
+        <div style="background: ${color}; width: ${percentage}%; height: 100%;"></div>
+      </div>
+    `;
+
+    let tableHtml = `
+      <div class="table-container">
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    historyRows.forEach(item => {
+      const badgeColor = item.status === "Present" ? "#166534" : (item.status === "Absent" ? "#dc2626" : "#d97706");
+      tableHtml += `
+        <tr>
+          <td>${item.date}</td>
+          <td><strong style="color: ${badgeColor};">${item.status}</strong></td>
+        </tr>
+      `;
+    });
+
+    tableHtml += `</tbody></table></div>`;
+    historyBox.innerHTML = tableHtml;
+
+  } catch (err) {
+    console.error("Error loading attendance:", err);
+    summaryBox.innerHTML = `<p class="placeholder-text" style="color:red;">Error loading attendance: ${err.message}</p>`;
+  }
+                                                                  }
 
