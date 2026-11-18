@@ -1635,5 +1635,43 @@ function sendLocalNotification(title, body) {
     });
   }
 }
+// ==========================================
+// IN-APP PWA INSTALL BUTTON LOGIC
+// ==========================================
+let deferredPrompt;
+const installBtn = document.getElementById("pwa-install-btn");
 
+window.addEventListener("beforeinstallprompt", (e) => {
+  // Prevent default mini-infobar on mobile Chrome
+  e.preventDefault();
+  // Save the prompt event for when the user clicks the button
+  deferredPrompt = e;
+  // Show our styled install button
+  if (installBtn) {
+    installBtn.style.display = "inline-block";
+  }
+});
+
+if (installBtn) {
+  installBtn.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    // Trigger native install prompt
+    deferredPrompt.prompt();
+    // Await user response
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log("Install prompt outcome:", outcome);
+    // Reset and hide
+    deferredPrompt = null;
+    installBtn.style.display = "none";
+  });
+}
+
+// Automatically hide the button once installed
+window.addEventListener("appinstalled", () => {
+  if (installBtn) {
+    installBtn.style.display = "none";
+  }
+  console.log("App installed successfully!");
+});
+}
 
