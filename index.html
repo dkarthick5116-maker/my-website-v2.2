@@ -222,9 +222,13 @@
         </button>
         <button type="button" class="s-nav-btn" onclick="switchStudentPanel('notices')">
           📢 <span class="text-en">Notices</span><span class="text-ta" style="display:none;">அறிவிப்புகள்</span>
+        </button>
           <button type="button" class="s-nav-btn" onclick="switchStudentPanel('exams')">
   📊 <span class="text-en">Report Card</span><span class="text-ta" style="display:none;">மதிப்பெண் பட்டியல்</span>
-   </button>
+          </button>    
+            <button type="button" class="s-nav-btn" onclick="switchStudentPanel('attendance')">
+          📋 <span class="text-en">Attendance</span><span class="text-ta" style="display:none;">வருகைப்பதிவு</span>
+         </button>
       </div>
 
       <!-- Student Panel 1: Homework & Submissions -->
@@ -261,7 +265,20 @@
     <p class="placeholder-text">Loading examination records...</p>
   </div>
 </div>
-   </section>
+           <!-- Student Panel 5: Attendance Summary -->
+      <div id="spanel-attendance" class="panel-card" style="display:none;">
+        <h3 class="text-en">My Attendance Record</h3>
+        <h3 class="text-ta" style="display:none;">என் வருகைப்பதிவு விவரம்</h3>
+      <div id="student-att-summary" class="item-card" style="margin-bottom: 16px; border-left-color: #0284c7;">
+          <p class="placeholder-text">Loading attendance summary...</p>
+        </div>
+        <h4 class="text-en" style="margin-top: 20px;">Daily Attendance History</h4>
+        <h4 class="text-ta" style="margin-top: 20px; display:none;">தினசரி வருகை விவரம்</h4>
+        <div id="student-att-history" class="list-wrapper">
+          <p class="placeholder-text">Loading history...</p>
+        </div>
+      </div>
+        </section>
      <!-- ================= TEACHER AUTH SECTION ================= -->
     <section id="teacher-section" class="auth-section" style="display:none;">
 
