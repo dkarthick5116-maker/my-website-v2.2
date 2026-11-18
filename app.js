@@ -324,6 +324,33 @@ async function loadStudentNotices(schoolName) {
     container.innerHTML = html;
   } catch (err) {
     container.innerHTML = `<p class="placeholder-text">Unable to load notices.</p>`;
+   // Real-time Homework Notifications for Student
+  requestNotificationPermission().then((granted) => {
+    if (granted && currentStudentData) {
+      let initialLoad = true;
+
+      db.collection("homework")
+        .where("classLevel", "==", currentStudentData.classLevel)
+        .onSnapshot((snapshot) => {
+          if (initialLoad) {
+            initialLoad = false;
+            return;
+          }
+
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+              const data = change.doc.data();
+              sendLocalNotification(
+                "📚 New Homework Assigned!",
+                `${data.subject || "Subject"}: ${data.title || "Check your portal for details."}`
+              );
+            }
+          });
+        }, (error) => {
+          console.error("Homework notification listener error:", error);
+        });
+    }
+  });
   }
     }
 // ==========================================
