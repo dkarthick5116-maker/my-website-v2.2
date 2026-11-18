@@ -1055,8 +1055,7 @@ async function loadTeacherExaminations(schoolName) {
     container.innerHTML = `<p class="placeholder-text">Error loading exams.</p>`;
   }
 }
-
-// 4. Open Marks Entry Panel
+// Updated: Open Marks Entry Panel with Performance Analytics
 async function openExamMarksPanel(examId, examTitle, classLevel, maxMarks) {
   const marksContainer = document.getElementById("exam-marks-container");
   const marksTitle = document.getElementById("exam-marks-title");
@@ -1064,7 +1063,7 @@ async function openExamMarksPanel(examId, examTitle, classLevel, maxMarks) {
 
   marksContainer.style.display = "block";
   marksTitle.textContent = `${examTitle} (Class ${classLevel} - Max: ${maxMarks})`;
-  marksContent.innerHTML = `<p class="placeholder-text">Loading student records...</p>`;
+  marksContent.innerHTML = `<p class="placeholder-text">Loading student records and analytics...</p>`;
   marksContainer.scrollIntoView({ behavior: "smooth" });
 
   try {
@@ -1080,11 +1079,62 @@ async function openExamMarksPanel(examId, examTitle, classLevel, maxMarks) {
       .get();
 
     const existingResults = {};
+    let totalMarksObtained = 0;
+    let gradedCount = 0;
+    let highestMark = -1;
+    let lowestMark = 9999;
+    let passCount = 0;
+    let failCount = 0;
+
     resultsSnapshot.forEach(doc => {
-      existingResults[doc.data().studentUid] = doc.data();
+      const data = doc.data();
+      existingResults[data.studentUid] = data;
+
+      const marks = parseFloat(data.marksObtained);
+      if (!isNaN(marks)) {
+        gradedCount++;
+        totalMarksObtained += marks;
+        if (marks > highestMark) highestMark = marks;
+        if (marks < lowestMark) lowestMark = marks;
+
+        // Passing condition: 35% or above
+        const pct = (marks / maxMarks) * 100;
+        if (pct >= 35) {
+          passCount++;
+        } else {
+          failCount++;
+        }
+      }
     });
 
+    // Compute summary stats
+    const avgMarks = gradedCount > 0 ? (totalMarksObtained / gradedCount).toFixed(1) : "-";
+    const avgPct = gradedCount > 0 ? Math.round((totalMarksObtained / (gradedCount * maxMarks)) * 100) : 0;
+    const displayHighest = gradedCount > 0 ? `${highestMark} / ${maxMarks}` : "-";
+    const displayLowest = gradedCount > 0 ? `${lowestMark} / ${maxMarks}` : "-";
+    const passPercentage = gradedCount > 0 ? Math.round((passCount / gradedCount) * 100) : 0;
+
+    // Analytics Header Block
     let html = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px;">
+        <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center;">
+          <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">CLASS AVERAGE</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: #1a237e; margin-top: 4px;">${avgMarks} <span style="font-size: 0.85rem;">(${avgPct}%)</span></div>
+        </div>
+        <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center;">
+          <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">HIGHEST SCORE</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: #166534; margin-top: 4px;">${displayHighest}</div>
+        </div>
+        <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center;">
+          <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">LOWEST SCORE</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: #dc2626; margin-top: 4px;">${displayLowest}</div>
+        </div>
+        <div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center;">
+          <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">PASS RATE</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: #0284c7; margin-top: 4px;">${passPercentage}% <span style="font-size: 0.75rem; color: #64748b;">(${passCount}P / ${failCount}F)</span></div>
+        </div>
+      </div>
+
       <div class="table-container">
         <table class="styled-table">
           <thead>
@@ -1132,7 +1182,6 @@ async function openExamMarksPanel(examId, examTitle, classLevel, maxMarks) {
     marksContent.innerHTML = `<p class="placeholder-text" style="color:red;">Error loading students: ${err.message}</p>`;
   }
 }
-
 // 5. Calculate Percentage, Grade & Save Result
 async function saveStudentExamMark(examId, studentUid, rollNumber, studentName, maxMarks, classLevel) {
   const markInput = document.getElementById(`mark-input-${studentUid}`);
