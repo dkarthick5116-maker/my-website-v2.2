@@ -3,7 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Learning Portal V2.2 - Tamil Nadu & CBSE</title>
+    <!-- PWA Configuration -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2a75bb">
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js")
+          .then((reg) => console.log("Service Worker registered successfully:", reg.scope))
+          .catch((err) => console.error("Service Worker registration failed:", err));
+      });
+    }
+  </script>
+    <title>Learning Portal V2.2 - Tamil Nadu & CBSE</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
